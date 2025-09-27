@@ -1,3 +1,4 @@
+"use client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -10,8 +11,8 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-import canon from "../../assets/canon.jpg";
-import modernsmartphonewithcolorfuldisplaymob from "../../assets/modern-smartphone-with-colorful-display-screen-mob.jpg";
+
+import Image from "next/image";
 
 export default function HeroSection() {
   return (
@@ -61,8 +62,10 @@ export default function HeroSection() {
             {/* Center Camera Image */}
             <div className="lg:col-span-4 flex justify-center">
               <div className="relative">
-                <img
-                  src={canon}
+                <Image
+                  width={300}
+                  height={80}
+                  src="https://cdn.bdstall.com/product-image/giant_233914.jpg"
                   alt="Canon EOS 77D DSLR Camera"
                   className="w-full max-w-md h-auto"
                 />
@@ -75,7 +78,7 @@ export default function HeroSection() {
               <Card
                 className="p-4 bg-white relative bg-cover bg-right text-gray-900"
                 style={{
-                  backgroundImage: `url(${modernsmartphonewithcolorfuldisplaymob})`,
+                  backgroundImage: `url(${"/security-camera.jpg"})`,
                 }}
               >
                 <div className="absolute inset-0 bg-white/80 rounded-2xl"></div>{" "}
@@ -184,8 +187,10 @@ export default function HeroSection() {
             {/* Break Disc Deals */}
             <div className="space-y-4">
               <div className="flex items-center gap-4 bg-white p-4 rounded-lg">
-                <img
-                  src="/gaming-laptop-computer-with-rgb-keyboard.jpg"
+                <Image
+                  width={200}
+                  height={80}
+                  src="https://sm.pcmag.com/pcmag_au/photo/m/msi-titan-/msi-titan-18-hx_r2s9.jpg"
                   alt="Gaming Laptop"
                   className="w-20 h-20 object-cover rounded"
                 />
@@ -217,8 +222,10 @@ export default function HeroSection() {
             {/* Headphones */}
             <div className="space-y-4">
               <div className="flex items-center gap-4 bg-white p-4 rounded-lg">
-                <img
-                  src="/blue-gaming-headphones-with-microphone.jpg"
+                <Image
+                  width={200}
+                  height={80}
+                  src="https://cdn.shopz.com.bd/2020/08/Plextone-PC780-Gaming-Headset-with-Mic-10.jpg"
                   alt="Gaming Headphones"
                   className="w-20 h-20 object-cover rounded"
                 />
@@ -250,8 +257,10 @@ export default function HeroSection() {
             {/* Tablet */}
             <div className="space-y-4">
               <div className="flex items-center gap-4 bg-white p-4 rounded-lg">
-                <img
-                  src="/modern-tablet-with-colorful-screen-display.jpg"
+                <Image
+                  width={200}
+                  height={80}
+                  src="https://www.livemint.com/lm-img/img/2025/05/22/600x338/best_tablets_1747901932210_1747901939207.jpg"
                   alt="Tablet"
                   className="w-20 h-20 object-cover rounded"
                 />
@@ -283,8 +292,10 @@ export default function HeroSection() {
             {/* Monitor */}
             <div className="space-y-4">
               <div className="flex items-center gap-4 bg-white p-4 rounded-lg">
-                <img
-                  src="/computer-monitor-display-screen.jpg"
+                <Image
+                  width={200}
+                  height={80}
+                  src="https://www.asus.com/media/Odin/Websites/global/Tab/20240326013834.jpg"
                   alt="Monitor"
                   className="w-20 h-20 object-cover rounded"
                 />
@@ -325,32 +336,40 @@ export default function HeroSection() {
               <h3 className="text-lg font-semibold mb-4">Gaming Accessories</h3>
               <div className="space-y-4">
                 <div className="text-center">
-                  <img
-                    src="/gaming-headphones-black.jpg"
+                  <Image
+                    width={200}
+                    height={80}
+                    src="https://i5.walmartimages.com/asr/6e0b666e-3434-4f9b-95b9-bc9f86153ee1.bf363f5de6cf9ed9fb7b6a6ce84ec64d.jpeg"
                     alt="Headsets"
                     className="w-20 h-20 mx-auto mb-2 rounded"
                   />
                   <p className="text-sm">Headsets</p>
                 </div>
                 <div className="text-center">
-                  <img
-                    src="/mechanical-gaming-keyboard-rgb.jpg"
+                  <Image
+                    width={200}
+                    height={80}
+                    src="https://m.media-amazon.com/images/I/713s+O99eDL._AC_SL1500_.jpg"
                     alt="Keyboards"
                     className="w-20 h-20 mx-auto mb-2 rounded"
                   />
                   <p className="text-sm">Keyboards</p>
                 </div>
                 <div className="text-center">
-                  <img
-                    src="/black-gaming-mouse.png"
+                  <Image
+                    width={200}
+                    height={80}
+                    src="https://www.zymak.com.bd/wp-content/uploads/2021/01/V6-Gaming-Mouse-With-RGB-Backlit-And-Metal-Body.png"
                     alt="Keyboards"
                     className="w-20 h-20 mx-auto mb-2 rounded"
                   />
                   <p className="text-sm">Keyboards</p>
                 </div>
                 <div className="text-center">
-                  <img
-                    src="/gaming-chair-black.jpg"
+                  <Image
+                    width={200}
+                    height={80}
+                    src="https://images.thdstatic.com/productImages/e6b2b036-d6cb-492d-83ac-6f7b87102800/svn/black-red-bestier-gaming-chairs-h200162a-gmbr-e1_600.jpg"
                     alt="Chairs"
                     className="w-20 h-20 mx-auto mb-2 rounded"
                   />
@@ -369,7 +388,9 @@ export default function HeroSection() {
               </h3>
               <div className="grid grid-cols-2 gap-4">
                 <div className="text-center">
-                  <img
+                  <Image
+                    width={200}
+                    height={80}
                     src="/fashion-tops-under-25-dollars.jpg"
                     alt="Tops under $25"
                     className="w-full h-20 object-cover rounded mb-2"
@@ -377,7 +398,9 @@ export default function HeroSection() {
                   <p className="text-sm">Tops under $25</p>
                 </div>
                 <div className="text-center">
-                  <img
+                  <Image
+                    width={200}
+                    height={80}
                     src="/jeans-under-50-dollars.jpg"
                     alt="Jeans under $50"
                     className="w-full h-20 object-cover rounded mb-2"
@@ -385,7 +408,9 @@ export default function HeroSection() {
                   <p className="text-sm">Jeans under $50</p>
                 </div>
                 <div className="text-center">
-                  <img
+                  <Image
+                    width={200}
+                    height={80}
                     src="/dresses-under-30-dollars.jpg"
                     alt="Dresses under $30"
                     className="w-full h-20 object-cover rounded mb-2"
@@ -393,7 +418,9 @@ export default function HeroSection() {
                   <p className="text-sm">Dresses under $30</p>
                 </div>
                 <div className="text-center">
-                  <img
+                  <Image
+                    width={200}
+                    height={80}
                     src="/shoes-under-50-dollars.jpg"
                     alt="Shoes under $50"
                     className="w-full h-20 object-cover rounded mb-2"
@@ -413,7 +440,9 @@ export default function HeroSection() {
               </h3>
               <div className="space-y-4">
                 <div className="text-center">
-                  <img
+                  <Image
+                    width={200}
+                    height={80}
                     src="/new-headsets-product-launch.jpg"
                     alt="Headsets"
                     className="w-20 h-20 mx-auto mb-2 rounded"
@@ -421,7 +450,9 @@ export default function HeroSection() {
                   <p className="text-sm">Headsets</p>
                 </div>
                 <div className="text-center">
-                  <img
+                  <Image
+                    width={200}
+                    height={80}
                     src="/smartwatch-new-product.jpg"
                     alt="Watch"
                     className="w-20 h-20 mx-auto mb-2 rounded"
@@ -429,7 +460,9 @@ export default function HeroSection() {
                   <p className="text-sm">Watch</p>
                 </div>
                 <div className="text-center">
-                  <img
+                  <Image
+                    width={200}
+                    height={80}
                     src="/chains-jewelry-new.jpg"
                     alt="Chains"
                     className="w-20 h-20 mx-auto mb-2 rounded"
@@ -460,7 +493,9 @@ export default function HeroSection() {
                   </Button>
                 </div>
                 <div className="text-center">
-                  <img
+                  <Image
+                    width={200}
+                    height={80}
                     src="/placeholder.svg?height=120&width=120"
                     alt="Wireless Earbuds"
                     className="w-30 h-30 mx-auto mb-2 rounded"

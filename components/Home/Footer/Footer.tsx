@@ -1,25 +1,27 @@
+"use client";
 import { Facebook, Twitter, Youtube, Linkedin, Instagram } from "lucide-react";
+import Image from "next/image";
 
 export default function Footer() {
   return (
-    <footer className="bg-white border-t">
+    <footer className="bg-background border-t border-border text-foreground">
       {/* Main Footer Content */}
       <div className="max-w-7xl mx-auto px-4 py-12">
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
           {/* Company Info */}
           <div className="lg:col-span-1">
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-                <div className="w-6 h-6 bg-white rounded-sm flex items-center justify-center">
-                  <div className="w-4 h-2 bg-green-500 rounded-sm"></div>
+              <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
+                <div className="w-6 h-6 bg-background rounded-sm flex items-center justify-center">
+                  <div className="w-4 h-2 bg-primary rounded-sm"></div>
                 </div>
               </div>
               <span className="text-xl font-bold">
-                <span className="text-green-500">Retail</span> Market
+                <span className="text-primary">Retail</span> Market
               </span>
             </div>
 
-            <p className="text-gray-600 text-sm mb-6 leading-relaxed">
+            <p className="text-muted-foreground text-sm mb-6 leading-relaxed">
               Phasellus justo ligula, dictum sit amet tortor eu, iaculis
               tristique turpis. Ut non sed est suscipit tempor ut quis felis.
               Praesent pellentesque
@@ -38,12 +40,16 @@ export default function Footer() {
             </div>
 
             <div className="flex gap-2">
-              <img
+              <Image
+                width={200}
+                height={80}
                 src="/google-play-store-badge.png"
                 alt="Get it on Google Play"
                 className="h-10"
               />
-              <img
+              <Image
+                width={200}
+                height={80}
                 src="/app-store-badge.png"
                 alt="Download on App Store"
                 className="h-10"
@@ -151,7 +157,9 @@ export default function Footer() {
             </h3>
             <div className="grid grid-cols-2 gap-4">
               <div className="flex items-center gap-3">
-                <img
+                <Image
+                  width={200}
+                  height={80}
                   src="/smart-watch-black.jpg"
                   alt="Smart Watch"
                   className="w-12 h-12 rounded object-cover"
@@ -165,7 +173,9 @@ export default function Footer() {
               </div>
 
               <div className="flex items-center gap-3">
-                <img
+                <Image
+                  width={200}
+                  height={80}
                   src="/apple-iphone-14-pro-max.jpg"
                   alt="iPhone 14 Pro Max"
                   className="w-12 h-12 rounded object-cover"
@@ -179,7 +189,9 @@ export default function Footer() {
               </div>
 
               <div className="flex items-center gap-3">
-                <img
+                <Image
+                  width={200}
+                  height={80}
                   src="/surface-laptop-touchscreen.jpg"
                   alt="Surface Laptop"
                   className="w-12 h-12 rounded object-cover"
@@ -193,7 +205,9 @@ export default function Footer() {
               </div>
 
               <div className="flex items-center gap-3">
-                <img
+                <Image
+                  width={200}
+                  height={80}
                   src="/bearway-super-console-gaming.jpg"
                   alt="Bearway Super Console"
                   className="w-12 h-12 rounded object-cover"
@@ -207,7 +221,9 @@ export default function Footer() {
               </div>
 
               <div className="flex items-center gap-3">
-                <img
+                <Image
+                  width={200}
+                  height={80}
                   src="/oneodio-wired-headphones.jpg"
                   alt="OneOdio Headphones"
                   className="w-12 h-12 rounded object-cover"
@@ -221,7 +237,9 @@ export default function Footer() {
               </div>
 
               <div className="flex items-center gap-3">
-                <img
+                <Image
+                  width={200}
+                  height={80}
                   src="/microsoft-surface-pro-9-tablet.jpg"
                   alt="Surface Pro 9"
                   className="w-12 h-12 rounded object-cover"
@@ -260,23 +278,41 @@ export default function Footer() {
               </div>
 
               <div className="flex gap-2 ml-4">
-                <img
+                <Image
+                  width={200}
+                  height={80}
                   src="/mastercard-logo.png"
                   alt="Mastercard"
                   className="h-6"
                 />
-                <img
+                <Image
+                  width={200}
+                  height={80}
                   src="/american-express-logo.png"
                   alt="American Express"
                   className="h-6"
                 />
-                <img src="/visa-logo-generic.png" alt="Visa" className="h-6" />
-                <img
+                <Image
+                  width={200}
+                  height={80}
+                  src="/visa-logo-generic.png"
+                  alt="Visa"
+                  className="h-6"
+                />
+                <Image
+                  width={200}
+                  height={80}
                   src="/abstract-discover-logo.png"
                   alt="Discover"
                   className="h-6"
                 />
-                <img src="/paypal-logo.png" alt="PayPal" className="h-6" />
+                <Image
+                  width={200}
+                  height={80}
+                  src="/paypal-logo.png"
+                  alt="PayPal"
+                  className="h-6"
+                />
               </div>
             </div>
           </div>

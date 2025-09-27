@@ -1,0 +1,209 @@
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import { Users, Wrench, Shield, Heart } from "lucide-react";
+import Image from "next/image";
+
+export default function AboutPage() {
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        {/* Breadcrumb Navigation */}
+        <Breadcrumb className="mb-8">
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink
+                href="/"
+                className="text-gray-600 hover:text-gray-900"
+              >
+                Home
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage className="text-green-600 font-medium">
+                About Us
+              </BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+
+        {/* Hero Section */}
+        <div className="grid lg:grid-cols-2 gap-12 mb-16">
+          <div className="order-2 lg:order-1">
+            <Image
+              width={800}
+              height={600}
+              src="/business-meeting-room-with-people-discussing-aroun.jpg"
+              alt="Business meeting"
+              className="w-full h-[400px] object-cover rounded-lg"
+            />
+          </div>
+          <div className="order-1 lg:order-2 flex flex-col justify-center">
+            <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-6 text-balance">
+              More Than 25+ Years We Provide True News
+            </h1>
+            <p className="text-gray-600 mb-6 leading-relaxed">
+              Lorem ipsum dolor sit amet consectetur adipisicing elit. Quos
+              sequi, amet voluptatum cupiditate culpa numquam quos hic neque
+              dolores officiis, iure voluptas aliquam sed explicabo dolor maxime
+              itaque saepe, a quam quisquam consequatur fuga. Sed sapiente at
+              quam dolore culpa! Repudiandae, laudantium? Temporibus iusto.
+            </p>
+            <ul className="space-y-2 text-gray-600">
+              <li className="flex items-center">
+                <span className="w-2 h-2 bg-green-600 rounded-full mr-3"></span>
+                Research beyond the business plan
+              </li>
+              <li className="flex items-center">
+                <span className="w-2 h-2 bg-green-600 rounded-full mr-3"></span>
+                Marketing options and rates
+              </li>
+              <li className="flex items-center">
+                <span className="w-2 h-2 bg-green-600 rounded-full mr-3"></span>
+                The ability to turnaround consulting
+              </li>
+              <li className="flex items-center">
+                <span className="w-2 h-2 bg-green-600 rounded-full mr-3"></span>
+                Customer engagement matters
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        {/* Achievements Section */}
+        <div className="text-center mb-16">
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">
+            Some of our achievements
+          </h2>
+          <p className="text-gray-600 max-w-3xl mx-auto mb-12 leading-relaxed">
+            Lorem ipsum dolor sit amet consectetur adipisicing elit. Quos sequi,
+            amet voluptatum cupiditate culpa numquam quos hic neque dolores
+            officiis, iure voluptas aliquam sed explicabo dolor maxime itaque
+            saepe, a quam quisquam consequatur.
+          </p>
+
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Users className="w-8 h-8 text-green-600" />
+              </div>
+              <div className="text-3xl font-bold text-gray-900 mb-1">05+</div>
+              <div className="text-gray-600 text-sm">Years Service</div>
+            </div>
+
+            <div className="text-center">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Wrench className="w-8 h-8 text-green-600" />
+              </div>
+              <div className="text-3xl font-bold text-gray-900 mb-1">100+</div>
+              <div className="text-gray-600 text-sm">Expert Technicians</div>
+            </div>
+
+            <div className="text-center">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Shield className="w-8 h-8 text-green-600" />
+              </div>
+              <div className="text-3xl font-bold text-gray-900 mb-1">90%</div>
+              <div className="text-gray-600 text-sm">Devices Fixed</div>
+            </div>
+
+            <div className="text-center">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Heart className="w-8 h-8 text-green-600" />
+              </div>
+              <div className="text-3xl font-bold text-gray-900 mb-1">800+</div>
+              <div className="text-gray-600 text-sm">Happy Customers</div>
+            </div>
+          </div>
+        </div>
+
+        {/* CEO Message Section */}
+        <div className="grid lg:grid-cols-2 gap-12 mb-16">
+          <div className="flex flex-col justify-center">
+            <h2 className="text-3xl font-bold text-gray-900 mb-6">
+              Message from the CEO
+            </h2>
+            <p className="text-gray-600 mb-6 leading-relaxed">
+              Lorem ipsum dolor sit amet consectetur adipisicing elit. Quos
+              sequi, amet voluptatum cupiditate culpa numquam quos hic neque
+              dolores officiis, iure voluptas aliquam sed explicabo dolor maxime
+              itaque saepe, a quam quisquam consequatur fuga. Sed sapiente at
+              quam dolore culpa! Repudiandae, laudantium? Temporibus iusto.
+            </p>
+            <ul className="space-y-2 text-gray-600 mb-8">
+              <li className="flex items-center">
+                <span className="w-2 h-2 bg-green-600 rounded-full mr-3"></span>
+                Research beyond the business plan
+              </li>
+              <li className="flex items-center">
+                <span className="w-2 h-2 bg-green-600 rounded-full mr-3"></span>
+                Marketing options and rates
+              </li>
+              <li className="flex items-center">
+                <span className="w-2 h-2 bg-green-600 rounded-full mr-3"></span>
+                The ability to turnaround consulting
+              </li>
+              <li className="flex items-center">
+                <span className="w-2 h-2 bg-green-600 rounded-full mr-3"></span>
+                Customer engagement matters
+              </li>
+            </ul>
+            <div>
+              <div className="text-2xl font-script text-gray-700 mb-1">
+                Dominic Toretto
+              </div>
+              <div className="text-gray-500 text-sm">CEO & Founder</div>
+            </div>
+          </div>
+          <div>
+            <Image
+              width={800}
+              height={600}
+              src="/professional-ceo-in-floral-shirt-smiling-confident.jpg"
+              alt="CEO Dominic Toretto"
+              className="w-full h-[500px] object-cover rounded-lg"
+            />
+          </div>
+        </div>
+
+        {/* Team Members Section */}
+        <div className="text-center">
+          <h2 className="text-3xl font-bold text-gray-900 mb-6">
+            About team members
+          </h2>
+          <p className="text-gray-600 max-w-3xl mx-auto mb-8 leading-relaxed">
+            Lorem ipsum dolor sit amet consectetur adipisicing elit. Quos sequi,
+            amet voluptatum cupiditate culpa numquam quos hic neque dolores
+            officiis, iure voluptas aliquam sed explicabo dolor maxime itaque
+            saepe, a quam quisquam consequatur fuga. Sed sapiente at quam dolore
+            culpa! Repudiandae, laudantium? Temporibus iusto.
+          </p>
+          <ul className="space-y-2 text-gray-600 max-w-md mx-auto text-left">
+            <li className="flex items-center">
+              <span className="w-2 h-2 bg-green-600 rounded-full mr-3"></span>
+              Research beyond the business plan
+            </li>
+            <li className="flex items-center">
+              <span className="w-2 h-2 bg-green-600 rounded-full mr-3"></span>
+              Marketing options and rates
+            </li>
+            <li className="flex items-center">
+              <span className="w-2 h-2 bg-green-600 rounded-full mr-3"></span>
+              The ability to turnaround consulting
+            </li>
+            <li className="flex items-center">
+              <span className="w-2 h-2 bg-green-600 rounded-full mr-3"></span>
+              Customer engagement matters
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  );
+}
