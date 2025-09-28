@@ -324,7 +324,7 @@ export default function ShopPage() {
     <div className="min-h-screen bg-background">
       {/* Breadcrumb */}
       <div className="border-b border-border px-4 py-3">
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-[1600px] mx-auto">
           <nav className="text-sm text-muted-foreground">
             <span>Home</span> <span className="mx-2">›</span>{" "}
             <span className="text-foreground">Shop</span>
@@ -332,7 +332,7 @@ export default function ShopPage() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-6">
+      <div className="max-w-[1600px] mx-auto px-4 py-6">
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Sidebar */}
           <motion.aside

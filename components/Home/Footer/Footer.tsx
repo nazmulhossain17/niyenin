@@ -1,38 +1,63 @@
 "use client";
-import { Facebook, Twitter, Youtube, Linkedin, Instagram } from "lucide-react";
+import {
+  Facebook,
+  Twitter,
+  Youtube,
+  Linkedin,
+  Instagram,
+  Headphones,
+} from "lucide-react";
 import Image from "next/image";
+import { motion } from "framer-motion";
+import { useTheme } from "next-themes";
+import Link from "next/link";
+import { useEffect, useState } from "react";
 
 export default function Footer() {
+  const { theme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   return (
     <footer className="bg-background border-t border-border text-foreground">
       {/* Main Footer Content */}
-      <div className="max-w-7xl mx-auto px-4 py-12">
+      <div className="max-w-[1600px] mx-auto px-4 py-12">
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
           {/* Company Info */}
           <div className="lg:col-span-1">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-                <div className="w-6 h-6 bg-background rounded-sm flex items-center justify-center">
-                  <div className="w-4 h-2 bg-primary rounded-sm"></div>
-                </div>
-              </div>
-              <span className="text-xl font-bold">
-                <span className="text-brand">NIYE</span> NIN
-              </span>
-            </div>
-
+            <motion.div
+              className="flex items-center mb-4"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              {mounted && (
+                <Image
+                  src={
+                    theme === "dark"
+                      ? "/images/niyenin-dark.png"
+                      : "/images/niyenin-white.png"
+                  }
+                  alt="NIYENIN Logo"
+                  width={240} // bigger than before
+                  height={80}
+                  className="h-12 w-auto md:h-16"
+                  priority
+                />
+              )}
+            </motion.div>
             <p className="text-muted-foreground text-sm mb-6 leading-relaxed">
               Phasellus justo ligula, dictum sit amet tortor eu, iaculis
-              tristique turpis. Ut non sed est suscipit tempor ut quis felis.
-              Praesent pellentesque
+              tristique turpis. Mauris non orci sed est suscipit tempor ut quis
+              felis. Praesent pellentesque
             </p>
 
             <div className="mb-6">
               <div className="flex items-center gap-2 mb-2">
-                <div className="p-1 bg-accent rounded-full">
-                  <div className="w-4 h-4 bg-primary rounded-full"></div>
-                </div>
-                <span className="text-primary font-semibold text-sm">
+                <Headphones className="w-6 h-6 text-green-600" />
+                <span className="text-green-600 font-semibold text-sm">
                   GOT QUESTION? CALL US 24/7!
                 </span>
               </div>
@@ -41,35 +66,35 @@ export default function Footer() {
 
             <div className="flex gap-2">
               <Image
-                width={200}
-                height={80}
-                src="/google-play-store-badge.png"
+                width={150}
+                height={50}
+                src="/images/google-play.png"
                 alt="Get it on Google Play"
-                className="h-10"
+                className="h-10 w-auto"
               />
               <Image
-                width={200}
-                height={80}
-                src="/app-store-badge.png"
+                width={150}
+                height={50}
+                src="/images/ios-store.png"
                 alt="Download on App Store"
-                className="h-10"
+                className="h-10 w-auto"
               />
             </div>
           </div>
 
           {/* Find It Fast */}
           <div>
-            <h3 className="text-brand font-bold text-sm mb-4 uppercase">
+            <h3 className="text-green-600 font-bold text-sm mb-4 uppercase">
               Find It Fast
             </h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
               {[
                 "Laptops & Computers",
-                "Camera & Photography",
+                "Cameras & Photography",
                 "Smart Phones & Tablets",
                 "Video Games & Consoles",
                 "TV & Audio",
-                "Sport & Outdoor",
+                "Gadgets",
                 "Waterproof Headphones",
                 "Quick Links",
               ].map((item) => (
@@ -84,7 +109,7 @@ export default function Footer() {
 
           {/* Customer Care */}
           <div>
-            <h3 className="text-brand font-bold text-sm mb-4 uppercase">
+            <h3 className="text-green-600 font-bold text-sm mb-4 uppercase">
               Customer Care
             </h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
@@ -108,7 +133,7 @@ export default function Footer() {
 
           {/* Weekly Selected */}
           <div className="lg:col-span-2">
-            <h3 className="text-brand font-bold text-sm mb-4 uppercase">
+            <h3 className="text-green-600 font-bold text-sm mb-4 uppercase">
               Weekly Selected
             </h3>
             <div className="grid grid-cols-2 gap-4">
@@ -117,13 +142,13 @@ export default function Footer() {
                   src: "/smart-watch-black.jpg",
                   alt: "Smart Watch",
                   name: "Smart Watch for Men Women",
-                  price: "$167",
+                  price: "$197",
                 },
                 {
                   src: "/apple-iphone-14-pro-max.jpg",
                   alt: "iPhone 14 Pro Max",
                   name: "Apple iPhone 14 Pro Max, 256GB",
-                  price: "$991",
+                  price: "$891",
                 },
                 {
                   src: "/surface-laptop-touchscreen.jpg",
@@ -152,8 +177,8 @@ export default function Footer() {
               ].map((item) => (
                 <div key={item.alt} className="flex items-center gap-3">
                   <Image
-                    width={200}
-                    height={80}
+                    width={48}
+                    height={48}
                     src={item.src}
                     alt={item.alt}
                     className="w-12 h-12 rounded object-cover"
@@ -171,58 +196,73 @@ export default function Footer() {
 
       {/* Bottom Footer */}
       <div className="border-t border-border bg-muted">
-        <div className="max-w-7xl mx-auto px-4 py-4">
+        <div className="max-w-[1600px] mx-auto px-4 py-4">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="text-sm text-muted-foreground">
               Copyright © 2024,{" "}
-              <span className="text-primary font-semibold">Retail Market</span>.
-              All Rights Reserved.
+              <span className="text-green-600 font-semibold">
+                Retail Market
+              </span>
+              . All Rights Reserved.
             </p>
 
             <div className="flex items-center gap-4">
-              <div className="flex gap-2">
-                <Facebook className="w-5 h-5 text-muted-foreground hover:text-blue-600 cursor-pointer" />
-                <Twitter className="w-5 h-5 text-muted-foreground hover:text-blue-400 cursor-pointer" />
-                <Youtube className="w-5 h-5 text-muted-foreground hover:text-red-600 cursor-pointer" />
-                <Linkedin className="w-5 h-5 text-muted-foreground hover:text-blue-700 cursor-pointer" />
-                <Instagram className="w-5 h-5 text-muted-foreground hover:text-pink-600 cursor-pointer" />
+              <div className="flex gap-3">
+                <a href="https://www.facebook.com/niyeninbd" target="_blank">
+                  <Facebook className="w-6 h-6 text-muted-foreground hover:text-blue-600 cursor-pointer" />
+                </a>
+                <a href="https://x.com/niyeninbd" target="_blank">
+                  <Twitter className="w-6 h-6 text-muted-foreground hover:text-blue-400 cursor-pointer" />
+                </a>
+                <a href="https://www.youtube.com/@niyeninbd" target="_blank">
+                  <Youtube className="w-6 h-6 text-muted-foreground hover:text-red-600 cursor-pointer" />
+                </a>
+                <a
+                  href="https://www.linkedin.com/company/niyeninbd"
+                  target="_blank"
+                >
+                  <Linkedin className="w-6 h-6 text-muted-foreground hover:text-blue-700 cursor-pointer" />
+                </a>
+                <a href="https://www.instagram.com/niyeninbd" target="_blank">
+                  <Instagram className="w-6 h-6 text-muted-foreground hover:text-pink-600 cursor-pointer" />
+                </a>
               </div>
 
-              <div className="flex gap-2 ml-4">
+              <div className="flex gap-3 ml-7">
                 <Image
-                  width={200}
-                  height={80}
-                  src="/mastercard-logo.png"
-                  alt="Mastercard"
-                  className="h-6"
-                />
-                <Image
-                  width={200}
-                  height={80}
-                  src="/american-express-logo.png"
+                  src="/images/american-express.png"
                   alt="American Express"
-                  className="h-6"
+                  width={40}
+                  height={24}
+                  className="h-6 w-auto"
                 />
                 <Image
-                  width={200}
-                  height={80}
-                  src="/visa-logo-generic.png"
+                  src="/images/master-card.png"
+                  alt="Mastercard"
+                  width={40}
+                  height={24}
+                  className="h-6 w-auto"
+                />
+                <Image
+                  src="/images/visa.png"
                   alt="Visa"
-                  className="h-6"
+                  width={40}
+                  height={24}
+                  className="h-6 w-auto"
                 />
                 <Image
-                  width={200}
-                  height={80}
-                  src="/abstract-discover-logo.png"
-                  alt="Discover"
-                  className="h-6"
+                  src="/images/bkash.png"
+                  alt="Bikash"
+                  width={40}
+                  height={24}
+                  className="h-6 w-auto"
                 />
                 <Image
-                  width={200}
-                  height={80}
-                  src="/paypal-logo.png"
-                  alt="PayPal"
-                  className="h-6"
+                  src="/images/nogod.png"
+                  alt="Nagad"
+                  width={40}
+                  height={24}
+                  className="h-6 w-auto"
                 />
               </div>
             </div>

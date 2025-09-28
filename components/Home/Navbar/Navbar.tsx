@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useTheme } from "next-themes";
+import Image from "next/image";
 
 const Header = () => {
   const { theme, setTheme } = useTheme();
@@ -43,7 +44,7 @@ const Header = () => {
     <div className="w-full">
       {/* Top Bar - Hidden on mobile, visible on tablet+ */}
       <div className="bg-background border-b border-border px-4 py-2 hidden md:block">
-        <div className="max-w-7xl mx-auto flex items-center justify-between text-sm">
+        <div className="max-w-[1600px] mx-auto flex items-center justify-between text-sm">
           {/* Left side - Hidden on tablet, visible on desktop */}
           <div className="hidden lg:flex items-center space-x-6">
             <div className="flex items-center space-x-1">
@@ -68,13 +69,13 @@ const Header = () => {
               <div className="flex items-center space-x-1">
                 <Mail className="w-4 h-4 text-primary" />
                 <span className="text-muted-foreground">
-                  retailmarket@gmail.com
+                  niyenin.bd@gmail.com
                 </span>
               </div>
 
               <div className="flex items-center space-x-1">
                 <Phone className="w-4 h-4 text-primary" />
-                <span className="text-muted-foreground">+1(213)628-3034</span>
+                <span className="text-muted-foreground">+880 163-0072567</span>
               </div>
             </div>
 
@@ -93,11 +94,34 @@ const Header = () => {
 
             {/* Social Icons - Hidden on tablet, visible on desktop */}
             <div className="hidden lg:flex items-center space-x-2 text-muted-foreground">
-              <Facebook className="w-4 h-4 hover:text-primary cursor-pointer" />
-              <Twitter className="w-4 h-4 hover:text-primary cursor-pointer" />
-              <Youtube className="w-4 h-4 hover:text-destructive cursor-pointer" />
-              <Linkedin className="w-4 h-4 hover:text-primary cursor-pointer" />
-              <Instagram className="w-4 h-4 hover:text-accent cursor-pointer" />
+              <a
+                href="https://www.facebook.com/niyeninbd/"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Facebook className="w-4 h-4 hover:text-primary cursor-pointer" />
+              </a>
+              <a
+                href="https://www.instagram.com/niyeninbd/"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Instagram className="w-4 h-4 hover:text-accent cursor-pointer" />
+              </a>
+              <a
+                href="https://www.youtube.com/@niyeninbd"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Youtube className="w-4 h-4 hover:text-destructive cursor-pointer" />
+              </a>
+              <a
+                href="https://www.linkedin.com/company/niyeninbd/"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Linkedin className="w-4 h-4 hover:text-primary cursor-pointer" />
+              </a>
             </div>
           </div>
         </div>
@@ -105,7 +129,7 @@ const Header = () => {
 
       {/* Main Header */}
       <div className="bg-card px-4 py-4 border-b border-border">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
+        <div className="max-w-[1600px] mx-auto flex items-center justify-between">
           {/* Mobile Menu Button - Only visible on mobile */}
           <button
             onClick={toggleMobileMenu}
@@ -127,13 +151,20 @@ const Header = () => {
             transition={{ duration: 0.5 }}
           >
             <div className="flex items-center">
-              <div className="w-6 h-6 md:w-8 md:h-8 bg-primary rounded-full flex items-center justify-center mr-2">
-                <ShoppingCart className="w-4 h-4 md:w-5 md:h-5 text-primary-foreground" />
-              </div>
-              <div className="text-xl md:text-2xl font-bold">
-                <span className="text-brand italic">NIYE</span>
-                <span className="text-primary">NIN</span>
-              </div>
+              {mounted && (
+                <Image
+                  src={
+                    theme === "dark"
+                      ? "/images/niyenin-dark.png"
+                      : "/images/niyenin-white.png"
+                  }
+                  alt="NIYENIN Logo"
+                  width={240}
+                  height={80}
+                  className="h-12 w-auto md:h-16"
+                  priority
+                />
+              )}
             </div>
           </motion.div>
 
@@ -223,7 +254,7 @@ const Header = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.4 }}
       >
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
+        <div className="max-w-[1600px] mx-auto flex items-center justify-between">
           {/* Browse */}
           <motion.button
             className="bg-brand hover:bg-primary/90 text-white px-3 py-2 md:px-4 rounded-lg flex items-center space-x-2 font-medium text-sm"
@@ -277,7 +308,7 @@ const Header = () => {
             <div className="hidden lg:block cursor-pointer hover:scale-105 transition-transform text-muted-foreground hover:text-foreground">
               <Search className="w-5 h-5" />
             </div>
-            <Link href="/account">
+            <Link href="/sign-in">
               <motion.button
                 className="bg-brand cursor-pointer text-white px-3 py-2 md:px-4 rounded font-medium transition-colors text-xs md:text-sm"
                 whileHover={{ scale: 1.05 }}

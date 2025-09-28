@@ -18,7 +18,7 @@ import { MapPin, Phone, Mail } from "lucide-react";
 function ContactForm() {
   return (
     <div className="min-h-screen bg-background p-6">
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-[1600px] mx-auto">
         {/* Breadcrumb Navigation */}
         <div className="mb-8">
           <Breadcrumb>
@@ -167,7 +167,7 @@ function ContactForm() {
                     Office Location
                   </h3>
                   <p className="text-muted-foreground text-sm leading-relaxed">
-                    4517 Washington Ave. Manchester, Kentucky 39495
+                    873, Islam Nagar Road No. 3, Khulna 9250
                   </p>
                 </div>
               </div>
@@ -184,8 +184,8 @@ function ContactForm() {
                     Phone Number
                   </h3>
                   <div className="text-muted-foreground text-sm space-y-1">
-                    <p>+405 - 555 - 0128 - 34</p>
-                    <p>+405 - 555 - 0128 - 63</p>
+                    <p>+880 163-0072567</p>
+                    {/* <p>+405 - 555 - 0128 - 63</p> */}
                   </div>
                 </div>
               </div>
@@ -202,8 +202,8 @@ function ContactForm() {
                     Mail address
                   </h3>
                   <div className="text-muted-foreground text-sm space-y-1">
-                    <p>example@gmail.com</p>
-                    <p>example@gmail.com</p>
+                    <p>niyenin.bd@gmail.com</p>
+                    {/* <p>example@gmail.com</p> */}
                   </div>
                 </div>
               </div>
@@ -214,8 +214,18 @@ function ContactForm() {
         {/* Map Section */}
         <div className="mt-12 bg-card rounded-lg overflow-hidden shadow-sm border">
           <div className="h-96 bg-muted relative">
-            <iframe
+            {/* <iframe
               src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3048.4037!2d-83.7613!3d37.1537!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMzfCsDA5JzEzLjMiTiA4M8KwNDUnNDAuNyJX!5e0!3m2!1sen!2sus!4v1234567890"
+              width="100%"
+              height="100%"
+              style={{ border: 0 }}
+              allowFullScreen
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              className="absolute inset-0"
+            /> */}
+            <iframe
+              src="https://www.google.com/maps/embed?pb=!1m16!1m12!1m3!1d7354.209359402968!2d89.53868615631734!3d22.835616338535797!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!2m1!1s873%2C%20Islam%20Nagar%20Road%20No.%203%2C%20Khulna%209250!5e0!3m2!1sen!2sbd!4v1759072512256!5m2!1sen!2sbd"
               width="100%"
               height="100%"
               style={{ border: 0 }}

@@ -19,7 +19,7 @@ export default function HeroSection() {
     <div className="min-h-screen bg-background">
       {/* Main Hero Section */}
       <div className="px-3 py-6">
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-[1600px] mx-auto">
           <div
             className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center rounded-2xl p-8 min-h-[600px]"
             style={{
@@ -136,7 +136,7 @@ export default function HeroSection() {
       {/* Rest of your existing code remains the same... */}
       {/* Trust Badges */}
       <div className="bg-card border-t border-b border-brand/20 py-6">
-        <div className="max-w-7xl mx-auto px-4">
+        <div className="max-w-[1600px] mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-brand/10 rounded-full">
@@ -197,7 +197,7 @@ export default function HeroSection() {
 
       {/* Product Categories */}
       <div className="py-12 bg-background">
-        <div className="max-w-7xl mx-auto px-4">
+        <div className="max-w-[1600px] mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {/* Break Disc Deals */}
             <div className="space-y-4">
