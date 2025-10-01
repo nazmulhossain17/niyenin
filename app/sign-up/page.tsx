@@ -68,7 +68,7 @@ function SignUpPage() {
     formState: { errors, isSubmitting },
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
-    mode: "onBlur", // Validate on blur
+    mode: "onBlur", 
     defaultValues: {
       fullName: "",
       email: "",
