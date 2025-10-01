@@ -25,7 +25,6 @@ import {
   Loader2,
   Shield,
   UserCheck,
-  Heart,
 } from "lucide-react";
 import { toast } from "sonner";
 

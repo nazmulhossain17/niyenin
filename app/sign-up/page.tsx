@@ -13,6 +13,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   User,
   Mail,
@@ -23,44 +24,61 @@ import {
   CheckCircle,
   AlertCircle,
   Loader2,
-  UserPlus,
+  MapPin,
 } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { registerUser } from "@/lib/api/register";
 
-interface RegisterFormData {
-  fullName: string;
-  email: string;
-  password: string;
-  drivingLicense?: string;
-  phoneNumber: string;
-  referralFullName: string;
-  referralEmail: string;
-}
+const registerSchema = z.object({
+  fullName: z
+    .string()
+    .min(1, "Full name is required")
+    .min(2, "Full name must be at least 2 characters"),
+  email: z
+    .string()
+    .min(1, "Email is required")
+    .email("Please enter a valid email address"),
+  password: z
+    .string()
+    .min(1, "Password is required")
+    .min(8, "Password must be at least 8 characters")
+    .regex(
+      /(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
+      "Password must contain uppercase, lowercase, and number"
+    ),
+  phoneNumber: z.string().min(11, "Phone number is required"),
+  address: z
+    .string()
+    .min(1, "Address is required")
+    .min(5, "Address must be at least 5 characters"),
+});
 
-interface FormErrors {
-  fullName?: string;
-  email?: string;
-  password?: string;
-  drivingLicense?: string;
-  phoneNumber?: string;
-  referralFullName?: string;
-  referralEmail?: string;
-}
+type RegisterFormData = z.infer<typeof registerSchema>;
 
-export default function SignUpPage() {
+function SignUpPage() {
   const [showPassword, setShowPassword] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState<RegisterFormData>({
-    fullName: "",
-    email: "",
-    password: "",
-    drivingLicense: "",
-    phoneNumber: "",
-    referralFullName: "",
-    referralEmail: "",
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors, isSubmitting },
+  } = useForm<RegisterFormData>({
+    resolver: zodResolver(registerSchema),
+    mode: "onBlur", // Validate on blur
+    defaultValues: {
+      fullName: "",
+      email: "",
+      password: "",
+      phoneNumber: "",
+      address: "",
+    },
   });
-  const [errors, setErrors] = useState<FormErrors>({});
+
+  const password = watch("password", "");
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -86,127 +104,22 @@ export default function SignUpPage() {
     },
   };
 
-  const validateForm = (): boolean => {
-    console.log("🔍 Starting form validation...");
-    console.log("📋 Current form data:", formData);
-
-    const newErrors: FormErrors = {};
-
-    if (!formData.fullName.trim()) {
-      newErrors.fullName = "Full name is required";
-      console.log("❌ Full name validation failed");
-    } else if (formData.fullName.trim().length < 2) {
-      newErrors.fullName = "Full name must be at least 2 characters";
-      console.log("❌ Full name too short");
-    } else {
-      console.log("✅ Full name validation passed");
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!formData.email.trim()) {
-      newErrors.email = "Email is required";
-      console.log("❌ Email validation failed - empty");
-    } else if (!emailRegex.test(formData.email)) {
-      newErrors.email = "Please enter a valid email address";
-      console.log("❌ Email validation failed - invalid format");
-    } else {
-      console.log("✅ Email validation passed");
-    }
-
-    if (!formData.password) {
-      newErrors.password = "Password is required";
-      console.log("❌ Password validation failed - empty");
-    } else if (formData.password.length < 8) {
-      newErrors.password = "Password must be at least 8 characters";
-      console.log("❌ Password validation failed - too short");
-    } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(formData.password)) {
-      newErrors.password =
-        "Password must contain uppercase, lowercase, and number";
-      console.log("❌ Password validation failed - complexity requirements");
-    } else {
-      console.log("✅ Password validation passed");
-    }
-
-    const phoneRegex = /^[+]?[1-9][\d]{0,15}$/;
-    if (!formData.phoneNumber.trim()) {
-      newErrors.phoneNumber = "Phone number is required";
-      console.log("❌ Phone number validation failed - empty");
-    } else if (
-      !phoneRegex.test(formData.phoneNumber.replace(/[\s\-()]/g, ""))
-    ) {
-      newErrors.phoneNumber = "Please enter a valid phone number";
-      console.log("❌ Phone number validation failed - invalid format");
-    } else {
-      console.log("✅ Phone number validation passed");
-    }
-
-    if (formData.referralEmail.trim()) {
-      if (!emailRegex.test(formData.referralEmail)) {
-        newErrors.referralEmail = "Please enter a valid referral email address";
-        console.log("❌ Referral email validation failed - invalid format");
-      } else {
-        console.log("✅ Referral email validation passed");
-      }
-    } else {
-      console.log("ℹ️ Referral email is empty (optional)");
-    }
-
-    setErrors(newErrors);
-    const isValid = Object.keys(newErrors).length === 0;
-    console.log("📊 Validation result:", isValid ? "PASSED" : "FAILED");
-    console.log("🚫 Validation errors:", newErrors);
-
-    return isValid;
-  };
-
-  const handleInputChange = (field: keyof RegisterFormData, value: string) => {
-    console.log(`📝 Input changed - ${field}:`, value);
-    setFormData((prev) => ({ ...prev, [field]: value }));
-
-    // Clear errors for the field being updated
-    if (errors[field as keyof FormErrors]) {
-      setErrors((prev) => ({ ...prev, [field]: undefined }));
-      console.log(`🧹 Cleared error for field: ${field}`);
-    }
-  };
-
-  const onSubmit = async (data: RegisterFormData): Promise<void> => {
+  const onSubmit = async (data: RegisterFormData) => {
     console.log("🚀 Form submission started...");
     console.log("📦 Payload being sent:", data);
 
-    setIsSubmitting(true);
-
     try {
-      // Simulate API call delay
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-
-      console.log("✅ Registration successful!");
+      const response = await registerUser(data);
+      console.log("✅ Registration successful!", response);
       toast.success("Account created! Redirecting to login...");
 
-      // Mock successful registration
       setTimeout(() => {
         window.location.href = "/sign-in";
       }, 1500);
-    } catch (error: any) {
+    } catch (error) {
       console.error("💥 Registration error:", error);
       const errorMessage = error.message || "Registration failed";
       toast.error(errorMessage);
-    } finally {
-      setIsSubmitting(false);
-      console.log("🏁 Form submission finished");
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log("📝 Form submit event triggered");
-    console.log("🔍 Current form data before validation:", formData);
-
-    if (validateForm()) {
-      console.log("✅ Form validation passed, proceeding with submission...");
-      await onSubmit(formData);
-    } else {
-      console.log("❌ Form validation failed, submission blocked");
     }
   };
 
@@ -220,7 +133,7 @@ export default function SignUpPage() {
     return strength;
   };
 
-  const passwordStrength = getPasswordStrength(formData.password);
+  const passwordStrength = getPasswordStrength(password);
 
   return (
     <div
@@ -326,7 +239,7 @@ export default function SignUpPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <form onSubmit={handleSubmit} className="space-y-6">
+                  <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                     {/* Full Name */}
                     <motion.div
                       initial={{ x: -50, opacity: 0 }}
@@ -348,11 +261,7 @@ export default function SignUpPage() {
                         id="fullName"
                         type="text"
                         placeholder="Enter your full name"
-                        required
-                        value={formData.fullName}
-                        onChange={(e) =>
-                          handleInputChange("fullName", e.target.value)
-                        }
+                        {...register("fullName")}
                         className={`mt-2 h-12 ${
                           errors.fullName ? "border-red-500" : ""
                         }`}
@@ -373,7 +282,7 @@ export default function SignUpPage() {
                           style={{ color: "var(--destructive)" }}
                         >
                           <AlertCircle className="w-4 h-4 mr-1" />
-                          {errors.fullName}
+                          {errors.fullName.message}
                         </motion.p>
                       )}
                     </motion.div>
@@ -399,11 +308,7 @@ export default function SignUpPage() {
                         id="email"
                         type="email"
                         placeholder="Enter your email address"
-                        required
-                        value={formData.email}
-                        onChange={(e) =>
-                          handleInputChange("email", e.target.value)
-                        }
+                        {...register("email")}
                         className={`mt-2 h-12 ${
                           errors.email ? "border-red-500" : ""
                         }`}
@@ -424,7 +329,7 @@ export default function SignUpPage() {
                           style={{ color: "var(--destructive)" }}
                         >
                           <AlertCircle className="w-4 h-4 mr-1" />
-                          {errors.email}
+                          {errors.email.message}
                         </motion.p>
                       )}
                     </motion.div>
@@ -450,12 +355,8 @@ export default function SignUpPage() {
                         <Input
                           id="password"
                           type={showPassword ? "text" : "password"}
-                          required
                           placeholder="Create a strong password"
-                          value={formData.password}
-                          onChange={(e) =>
-                            handleInputChange("password", e.target.value)
-                          }
+                          {...register("password")}
                           className={`h-12 pr-12 ${
                             errors.password ? "border-red-500" : ""
                           }`}
@@ -481,7 +382,7 @@ export default function SignUpPage() {
                           )}
                         </button>
                       </div>
-                      {formData.password && (
+                      {password && (
                         <div className="mt-2">
                           <div className="flex space-x-1">
                             {[1, 2, 3, 4, 5].map((level) => (
@@ -520,7 +421,7 @@ export default function SignUpPage() {
                           style={{ color: "var(--destructive)" }}
                         >
                           <AlertCircle className="w-4 h-4 mr-1" />
-                          {errors.password}
+                          {errors.password.message}
                         </motion.p>
                       )}
                     </motion.div>
@@ -545,12 +446,8 @@ export default function SignUpPage() {
                       <Input
                         id="phoneNumber"
                         type="tel"
-                        required
                         placeholder="Enter your phone number"
-                        value={formData.phoneNumber}
-                        onChange={(e) =>
-                          handleInputChange("phoneNumber", e.target.value)
-                        }
+                        {...register("phoneNumber")}
                         className={`mt-2 h-12 ${
                           errors.phoneNumber ? "border-red-500" : ""
                         }`}
@@ -571,76 +468,38 @@ export default function SignUpPage() {
                           style={{ color: "var(--destructive)" }}
                         >
                           <AlertCircle className="w-4 h-4 mr-1" />
-                          {errors.phoneNumber}
+                          {errors.phoneNumber.message}
                         </motion.p>
                       )}
                     </motion.div>
 
-                    {/* Referral Full Name */}
+                    {/* Address */}
                     <motion.div
                       initial={{ x: -50, opacity: 0 }}
                       animate={{ x: 0, opacity: 1 }}
                       transition={{ delay: 0.5 }}
                     >
                       <Label
-                        htmlFor="referralFullName"
+                        htmlFor="address"
                         className="text-base font-semibold flex items-center"
                         style={{ color: "var(--card-foreground)" }}
                       >
-                        <UserPlus
+                        <MapPin
                           className="w-4 h-4 mr-2"
                           style={{ color: "var(--brand)" }}
                         />
                         Address
                       </Label>
                       <Input
-                        id="referralFullName"
+                        id="address"
                         type="text"
-                        placeholder="Enter your Address"
-                        value={formData.referralFullName}
-                        onChange={(e) =>
-                          handleInputChange("referralFullName", e.target.value)
-                        }
-                        className="mt-2 h-12"
-                        style={{
-                          backgroundColor: "var(--background)",
-                          color: "var(--foreground)",
-                          borderColor: "var(--input)",
-                        }}
-                        disabled={isSubmitting}
-                      />
-                    </motion.div>
-
-                    {/* Referral Email */}
-                    {/* <motion.div
-                      initial={{ x: -50, opacity: 0 }}
-                      animate={{ x: 0, opacity: 1 }}
-                      transition={{ delay: 0.6 }}
-                    >
-                      <Label
-                        htmlFor="referralEmail"
-                        className="text-base font-semibold flex items-center"
-                        style={{ color: "var(--card-foreground)" }}
-                      >
-                        <Mail
-                          className="w-4 h-4 mr-2"
-                          style={{ color: "var(--brand)" }}
-                        />
-                        Referrer's Email
-                      </Label>
-                      <Input
-                        id="referralEmail"
-                        type="email"
-                        placeholder="Enter referrer's email if applicable"
-                        value={formData.referralEmail}
-                        onChange={(e) =>
-                          handleInputChange("referralEmail", e.target.value)
-                        }
+                        placeholder="Enter your address"
+                        {...register("address")}
                         className={`mt-2 h-12 ${
-                          errors.referralEmail ? "border-red-500" : ""
+                          errors.address ? "border-red-500" : ""
                         }`}
                         style={{
-                          borderColor: errors.referralEmail
+                          borderColor: errors.address
                             ? "var(--destructive)"
                             : "var(--input)",
                           backgroundColor: "var(--background)",
@@ -648,7 +507,7 @@ export default function SignUpPage() {
                         }}
                         disabled={isSubmitting}
                       />
-                      {errors.referralEmail && (
+                      {errors.address && (
                         <motion.p
                           initial={{ opacity: 0, y: -10 }}
                           animate={{ opacity: 1, y: 0 }}
@@ -656,23 +515,23 @@ export default function SignUpPage() {
                           style={{ color: "var(--destructive)" }}
                         >
                           <AlertCircle className="w-4 h-4 mr-1" />
-                          {errors.referralEmail}
+                          {errors.address.message}
                         </motion.p>
                       )}
-                    </motion.div> */}
+                    </motion.div>
 
                     {/* Submit Button */}
                     <motion.div
                       initial={{ x: -50, opacity: 0 }}
                       animate={{ x: 0, opacity: 1 }}
-                      transition={{ delay: 0.7 }}
+                      transition={{ delay: 0.6 }}
                       whileHover={{ scale: isSubmitting ? 1 : 1.02 }}
                       whileTap={{ scale: isSubmitting ? 1 : 0.98 }}
                     >
                       <Button
                         type="submit"
                         disabled={isSubmitting}
-                        className="w-full py-4 text-lg font-semibold h-auto disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full py-4 text-lg font-semibold h-auto disabled:opacity-50 cursor-pointer"
                         style={{
                           background:
                             "linear-gradient(135deg, var(--brand) 0%, var(--color-chart-2) 100%)",
@@ -697,7 +556,7 @@ export default function SignUpPage() {
                     <motion.div
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
-                      transition={{ delay: 0.8 }}
+                      transition={{ delay: 0.7 }}
                       className="text-center pt-4"
                     >
                       <p style={{ color: "var(--muted-foreground)" }}>
@@ -721,3 +580,5 @@ export default function SignUpPage() {
     </div>
   );
 }
+
+export default SignUpPage;
