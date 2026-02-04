@@ -314,7 +314,7 @@ export default function HeroSection({ config = defaultConfig }: HeroSectionProps
                     )}
 
                     {/* CTA Button */}
-                    <Link href={`/products/${currentProduct.slug}`}>
+                    <Link href={`/shop/${currentProduct.slug}`}>
                       <Button className="bg-brand hover:bg-brand/90 text-white px-6 sm:px-8 py-2.5 sm:py-3 rounded-full text-sm sm:text-base">
                         SHOP NOW
                         <ArrowRight className="ml-2 h-4 w-4" />
@@ -453,7 +453,7 @@ export default function HeroSection({ config = defaultConfig }: HeroSectionProps
                         )}
 
                         <div className="flex items-center justify-between flex-wrap gap-2">
-                          <Link href={`/products/${currentFlashDealProduct?.slug}`}>
+                          <Link href={`/shop/${currentFlashDealProduct?.slug}`}>
                             <Button
                               variant="outline"
                               size="sm"

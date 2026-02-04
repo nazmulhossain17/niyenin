@@ -33,17 +33,19 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
-// Routes that should skip address redirect
-const SKIP_ADDRESS_REDIRECT_ROUTES = [
+// Routes that should skip address check entirely
+const SKIP_ADDRESS_CHECK_ROUTES = [
   "/profile/addresses/setup",
   "/profile/addresses",
   "/sign-in",
   "/sign-up",
   "/forgot-password",
   "/reset-password",
+  "/admin",
+  "/vendor",
 ];
 
-// Routes that require address to be set before access
+// Routes that REQUIRE address to be set before access (redirect if no address)
 const ADDRESS_REQUIRED_ROUTES = [
   "/checkout",
 ];
@@ -61,10 +63,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const checkAddresses = useCallback(async (): Promise<boolean> => {
     try {
       setIsCheckingAddresses(true);
-      const response = await fetch("/api/user/addresses");
+      const response = await fetch("/api/user/addresses", {
+        credentials: 'include',
+        headers: {
+          'Cache-Control': 'no-cache',
+        },
+      });
+      
+      if (!response.ok) {
+        console.error("Address check failed:", response.status);
+        setHasAddresses(null);
+        return false;
+      }
+      
       const result = await response.json();
 
-      if (result.success && result.data) {
+      if (result.success && Array.isArray(result.data)) {
         const hasAddr = result.data.length > 0;
         setHasAddresses(hasAddr);
         return hasAddr;
@@ -73,7 +87,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       return false;
     } catch (error) {
       console.error("Error checking addresses:", error);
-      setHasAddresses(false);
+      setHasAddresses(null);
       return false;
     } finally {
       setIsCheckingAddresses(false);
@@ -107,43 +121,43 @@ export function AuthProvider({ children }: AuthProviderProps) {
     checkSession();
   }, []);
 
-  // Check addresses after user is authenticated
+  // Check addresses after user is authenticated (only once)
   useEffect(() => {
     if (user && !hasCheckedAddresses && !isLoading) {
-      setHasCheckedAddresses(true);
-      checkAddresses();
+      // Check if we should skip address check for this route
+      const shouldSkip = SKIP_ADDRESS_CHECK_ROUTES.some(
+        (route) => pathname === route || pathname.startsWith(`${route}/`)
+      );
+      
+      if (!shouldSkip) {
+        setHasCheckedAddresses(true);
+        checkAddresses();
+      }
     }
-  }, [user, hasCheckedAddresses, isLoading, checkAddresses]);
+  }, [user, hasCheckedAddresses, isLoading, checkAddresses, pathname]);
 
-  // Handle address-required routes redirect
+  // Handle address-required routes redirect (ONLY for checkout-like routes)
   useEffect(() => {
     // Skip if still loading or checking
     if (isLoading || isCheckingAddresses || !user) return;
 
-    // Check if we should skip redirect for this route
-    const shouldSkip = SKIP_ADDRESS_REDIRECT_ROUTES.some(
-      (route) => pathname === route || pathname.startsWith(`${route}/`)
-    );
-
-    if (shouldSkip) return;
-
-    // Check if this route requires an address
+    // Check if this route REQUIRES an address (not just any authenticated route)
     const requiresAddress = ADDRESS_REQUIRED_ROUTES.some(
       (route) => pathname === route || pathname.startsWith(`${route}/`)
     );
 
-    // If address is required but user has no addresses, redirect
-    if (requiresAddress && hasAddresses === false) {
+    // Only redirect if:
+    // 1. Route requires address
+    // 2. We've checked and confirmed user has NO addresses
+    // 3. We're not already on the setup page
+    if (
+      requiresAddress && 
+      hasAddresses === false && 
+      !pathname.startsWith("/profile/addresses/setup")
+    ) {
       router.push(`/profile/addresses/setup?returnTo=${encodeURIComponent(pathname)}`);
     }
   }, [pathname, user, hasAddresses, isLoading, isCheckingAddresses, router]);
-
-  // Refresh session on pathname change (navigation)
-  useEffect(() => {
-    if (!isLoading) {
-      refreshSession();
-    }
-  }, [pathname, isLoading, refreshSession]);
 
   const signOut = useCallback(async () => {
     try {

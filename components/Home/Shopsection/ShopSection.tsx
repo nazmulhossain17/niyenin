@@ -331,8 +331,8 @@ function ProductCard({ product, index }: { product: Product; index: number }) {
         </div>
 
         {/* Image */}
-        <Link href={`/products/${product.slug}`} className="block">
-          <div className="relative aspect-square mb-2 sm:mb-3 overflow-hidden rounded-lg bg-muted/30">
+        <div className="relative aspect-square mb-2 sm:mb-3 overflow-hidden rounded-lg bg-muted/30">
+          <Link href={`/shop/${product.slug}`} className="block w-full h-full">
             {product.mainImage ? (
               <Image
                 src={product.mainImage}
@@ -346,31 +346,31 @@ function ProductCard({ product, index }: { product: Product; index: number }) {
                 No Image
               </div>
             )}
+          </Link>
 
-            {/* Quick Actions */}
-            <div className="absolute top-1 sm:top-2 right-1 sm:right-2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-              <button
-                onClick={handleToggleWishlist}
-                className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-white shadow flex items-center justify-center transition-colors ${
-                  inWishlist ? "text-destructive" : "text-muted-foreground hover:text-destructive"
-                }`}
-              >
-                <Heart className={`w-3 h-3 sm:w-4 sm:h-4 ${inWishlist ? "fill-current" : ""}`} />
-              </button>
-              <Link href={`/products/${product.slug}`}>
-                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-white shadow flex items-center justify-center text-muted-foreground hover:text-primary transition-colors">
-                  <Eye className="w-3 h-3 sm:w-4 sm:h-4" />
-                </div>
-              </Link>
-            </div>
+          {/* Quick Actions - Outside the Link to avoid nesting */}
+          <div className="absolute top-1 sm:top-2 right-1 sm:right-2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+            <button
+              onClick={handleToggleWishlist}
+              className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-white shadow flex items-center justify-center transition-colors ${
+                inWishlist ? "text-destructive" : "text-muted-foreground hover:text-destructive"
+              }`}
+            >
+              <Heart className={`w-3 h-3 sm:w-4 sm:h-4 ${inWishlist ? "fill-current" : ""}`} />
+            </button>
+            <Link href={`/shop/${product.slug}`}>
+              <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-white shadow flex items-center justify-center text-muted-foreground hover:text-primary transition-colors">
+                <Eye className="w-3 h-3 sm:w-4 sm:h-4" />
+              </div>
+            </Link>
           </div>
-        </Link>
+        </div>
 
         {/* Content */}
         <div className="flex-1 flex flex-col">
           <StarRating rating={rating} />
 
-          <Link href={`/products/${product.slug}`}>
+          <Link href={`/shop/${product.slug}`}>
             <h4 className="font-medium text-xs sm:text-sm text-foreground mt-1.5 sm:mt-2 line-clamp-2 hover:text-primary transition-colors min-h-[2.5em]">
               {product.name}
             </h4>
@@ -435,7 +435,7 @@ function LatestItem({ product, index }: { product: Product; index: number }) {
       viewport={{ once: true }}
       transition={{ delay: index * 0.08 }}
     >
-      <Link href={`/products/${product.slug}`}>
+      <Link href={`/shop/${product.slug}`}>
         <div className="flex items-center gap-2 sm:gap-3 py-2 border-b border-border last:border-b-0 hover:bg-muted/50 transition-colors duration-200 px-1">
           <div className="relative w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-lg overflow-hidden bg-muted/30 shrink-0">
             {product.mainImage ? (
@@ -834,7 +834,7 @@ export default function ShopSection({ config = defaultConfig }: ShopSectionProps
                     viewport={{ once: true }}
                     transition={{ delay: index * 0.1 }}
                   >
-                    <Link href={`/products/${product.slug}`}>
+                    <Link href={`/shop/${product.slug}`}>
                       <Card className="relative overflow-hidden rounded-xl bg-[#1a1a1a] p-4 sm:p-5 min-h-[120px] sm:min-h-[140px] lg:min-h-[160px] group">
                         <div className="relative z-10">
                           {product.salePrice && (
@@ -951,7 +951,7 @@ export default function ShopSection({ config = defaultConfig }: ShopSectionProps
                         {flashDealProduct.brand?.name || "Featured Brand"}
                       </span>
                     </div>
-                    <Link href={`/products/${flashDealProduct.slug}`}>
+                    <Link href={`/shop/${flashDealProduct.slug}`}>
                       <h3 className="font-bold text-lg sm:text-xl lg:text-2xl text-foreground mt-1 sm:mt-2 hover:text-primary transition-colors line-clamp-2">
                         {flashDealProduct.name}
                       </h3>
@@ -979,7 +979,7 @@ export default function ShopSection({ config = defaultConfig }: ShopSectionProps
                     <p className="text-xs sm:text-sm text-muted-foreground mb-2 sm:mb-3">Deals End In:</p>
                     <CountdownTimer />
 
-                    <Link href={`/products/${flashDealProduct.slug}`}>
+                    <Link href={`/shop/${flashDealProduct.slug}`}>
                       <div className="relative w-full h-32 sm:h-40 lg:h-52 mt-4 sm:mt-5 mb-3 sm:mb-4 bg-muted/30 rounded-lg overflow-hidden cursor-pointer group">
                         {flashDealProduct.mainImage && (
                           <Image
@@ -1010,7 +1010,7 @@ export default function ShopSection({ config = defaultConfig }: ShopSectionProps
                   </div>
                 ) : dealProducts[1] ? (
                   <div className="flex flex-col h-full">
-                    <Link href={`/products/${dealProducts[1].slug}`}>
+                    <Link href={`/shop/${dealProducts[1].slug}`}>
                       <div className="relative w-full h-32 sm:h-44 lg:h-52 mb-3 sm:mb-4 bg-muted/30 rounded-lg overflow-hidden cursor-pointer group">
                         {dealProducts[1].mainImage && (
                           <Image
@@ -1050,7 +1050,7 @@ export default function ShopSection({ config = defaultConfig }: ShopSectionProps
 
                     <StarRating rating={parseFloat(dealProducts[1].averageRating) || 0} />
 
-                    <Link href={`/products/${dealProducts[1].slug}`}>
+                    <Link href={`/shop/${dealProducts[1].slug}`}>
                       <h4 className="font-semibold text-xs sm:text-sm lg:text-base text-foreground mt-1.5 sm:mt-2 hover:text-primary transition-colors line-clamp-2">
                         {dealProducts[1].name}
                       </h4>

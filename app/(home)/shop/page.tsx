@@ -5,7 +5,7 @@
 
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
@@ -15,7 +15,6 @@ import {
   LayoutGrid,
   List,
   ChevronDown,
-  ChevronRight,
   Star,
   Heart,
   ShoppingCart,
@@ -26,7 +25,6 @@ import {
   Check,
   Filter,
   Loader2,
-  RefreshCw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,58 +40,40 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 import { useCart } from "@/context/cart-context";
 import { useWishlist } from "@/context/wishlist-context";
 import { toast } from "sonner";
 
-// Types
+// ======================
+// Types matching API response (flat fields)
+// ======================
 interface Product {
   productId: string;
-  vendorId: string;
-  categoryId: string;
-  brandId: string | null;
   name: string;
   slug: string;
-  sku: string | null;
-  shortDescription: string | null;
-  description: string | null;
+  mainImage: string | null;
   originalPrice: string;
   salePrice: string | null;
   stockQuantity: number;
-  lowStockThreshold: number;
-  mainImage: string | null;
-  images: string[];
-  status: string;
-  isActive: boolean;
   isFeatured: boolean;
   isFlashDeal: boolean;
-  viewCount: number;
-  soldCount: number;
+  flashDealStartAt: string | null;
+  flashDealEndAt: string | null;
   averageRating: string;
   totalRatings: number;
+  soldCount: number;
   createdAt: string;
-  category?: {
-    categoryId: string;
-    name: string;
-    slug: string;
-  } | null;
-  brand?: {
-    brandId: string;
-    name: string;
-    slug: string;
-    logo: string | null;
-  } | null;
-  vendor?: {
-    vendorId: string;
-    shopName: string;
-    shopSlug: string;
-  } | null;
+  // Flat vendor fields from API
+  vendorId: string;
+  vendorName: string | null;
+  vendorSlug: string | null;
+  vendorLogo: string | null;
+  // Flat category fields
+  categoryId: string;
+  categoryName: string | null;
+  // Flat brand fields
+  brandId: string | null;
+  brandName: string | null;
 }
 
 interface Category {
@@ -126,7 +106,9 @@ interface ApiResponse<T> {
   };
 }
 
+// ======================
 // Product Card Component
+// ======================
 const ProductCard = ({
   product,
   viewMode,
@@ -140,10 +122,12 @@ const ProductCard = ({
 
   const inWishlist = isInWishlist(product.productId);
   const inCart = isInCart(product.productId);
-  
-  const price = product.salePrice ? parseFloat(product.salePrice) : parseFloat(product.originalPrice);
+
+  const price = product.salePrice
+    ? parseFloat(product.salePrice)
+    : parseFloat(product.originalPrice);
   const originalPrice = parseFloat(product.originalPrice);
-  const discount = product.salePrice 
+  const discount = product.salePrice
     ? Math.round(((originalPrice - price) / originalPrice) * 100)
     : 0;
   const rating = parseFloat(product.averageRating) || 0;
@@ -156,26 +140,25 @@ const ProductCard = ({
       toast.info("Item is already in your cart");
       return;
     }
-
     if (product.stockQuantity === 0) {
       toast.error("Product is out of stock");
       return;
     }
 
     setIsAddingToCart(true);
-    await new Promise((resolve) => setTimeout(resolve, 300));
+    await new Promise((r) => setTimeout(r, 300));
 
     addToCart({
       productId: product.productId,
       name: product.name,
       slug: product.slug,
       image: product.mainImage || "",
-      price: price,
-      originalPrice: originalPrice,
+      price,
+      originalPrice,
       quantity: 1,
       maxQuantity: Math.min(product.stockQuantity, 10),
       vendorId: product.vendorId,
-      vendorName: product.vendor?.shopName || "Unknown",
+      vendorName: product.vendorName || "Unknown",
     });
 
     setIsAddingToCart(false);
@@ -191,15 +174,16 @@ const ProductCard = ({
       name: product.name,
       slug: product.slug,
       image: product.mainImage || "",
-      price: price,
-      originalPrice: originalPrice,
+      price,
+      originalPrice,
       inStock: product.stockQuantity > 0,
-      vendorName: product.vendor?.shopName || "Unknown",
+      vendorName: product.vendorName || "Unknown",
     });
 
     toast.success(inWishlist ? "Removed from wishlist" : "Added to wishlist");
   };
 
+  // ---- LIST VIEW ----
   if (viewMode === "list") {
     return (
       <motion.div
@@ -210,9 +194,8 @@ const ProductCard = ({
         <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-300">
           <CardContent className="p-0">
             <div className="flex flex-col sm:flex-row">
-              {/* Image */}
               <Link
-                href={`/products/${product.slug}`}
+                href={`/shop/${product.slug}`}
                 className="relative w-full sm:w-64 h-48 sm:h-auto shrink-0 bg-muted overflow-hidden"
               >
                 {product.mainImage ? (
@@ -227,11 +210,11 @@ const ProductCard = ({
                     <Package className="w-16 h-16 text-muted-foreground/30" />
                   </div>
                 )}
-
-                {/* Badges */}
                 <div className="absolute top-3 left-3 flex flex-col gap-2">
                   {product.isFlashDeal && (
-                    <Badge className="bg-orange-500 hover:bg-orange-600">FLASH</Badge>
+                    <Badge className="bg-orange-500 hover:bg-orange-600">
+                      FLASH
+                    </Badge>
                   )}
                   {discount > 0 && (
                     <Badge className="bg-destructive hover:bg-destructive">
@@ -241,23 +224,20 @@ const ProductCard = ({
                 </div>
               </Link>
 
-              {/* Content */}
               <div className="flex-1 p-5">
                 <div className="flex flex-col h-full">
-                  {/* Header */}
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1">
                       <p className="text-xs text-muted-foreground mb-1">
-                        {product.brand?.name || "No Brand"} • {product.category?.name || "Uncategorized"}
+                        {product.brandName || "No Brand"} •{" "}
+                        {product.categoryName || "Uncategorized"}
                       </p>
-                      <Link href={`/products/${product.slug}`}>
+                      <Link href={`/shop/${product.slug}`}>
                         <h3 className="font-semibold text-lg line-clamp-2 hover:text-primary transition-colors">
                           {product.name}
                         </h3>
                       </Link>
                     </div>
-
-                    {/* Wishlist Button */}
                     <button
                       onClick={handleToggleWishlist}
                       className={`p-2 rounded-full transition-colors ${
@@ -272,7 +252,6 @@ const ProductCard = ({
                     </button>
                   </div>
 
-                  {/* Rating */}
                   <div className="flex items-center gap-2 mt-2">
                     <div className="flex items-center">
                       {[...Array(5)].map((_, i) => (
@@ -291,20 +270,18 @@ const ProductCard = ({
                     </span>
                   </div>
 
-                  {/* Vendor */}
-                  {product.vendor && (
+                  {product.vendorName && (
                     <p className="text-sm text-muted-foreground mt-2">
                       Sold by:{" "}
                       <Link
-                        href={`/vendors/${product.vendor.shopSlug}`}
+                        href={`/vendors/${product.vendorSlug || product.vendorId}`}
                         className="text-primary hover:underline"
                       >
-                        {product.vendor.shopName}
+                        {product.vendorName}
                       </Link>
                     </p>
                   )}
 
-                  {/* Price & Actions */}
                   <div className="flex items-center justify-between mt-auto pt-4">
                     <div className="flex items-center gap-2">
                       <span className="text-2xl font-bold text-primary">
@@ -316,9 +293,8 @@ const ProductCard = ({
                         </span>
                       )}
                     </div>
-
                     <div className="flex items-center gap-2">
-                      <Link href={`/products/${product.slug}`}>
+                      <Link href={`/shop/${product.slug}`}>
                         <Button variant="outline" size="sm">
                           <Eye className="w-4 h-4 mr-2" />
                           View
@@ -328,7 +304,9 @@ const ProductCard = ({
                         size="sm"
                         onClick={handleAddToCart}
                         disabled={isAddingToCart || product.stockQuantity === 0}
-                        className={inCart ? "bg-green-500 hover:bg-green-600" : ""}
+                        className={
+                          inCart ? "bg-green-500 hover:bg-green-600" : ""
+                        }
                       >
                         {isAddingToCart ? (
                           <Loader2 className="w-4 h-4 animate-spin" />
@@ -355,7 +333,7 @@ const ProductCard = ({
     );
   }
 
-  // Grid View
+  // ---- GRID VIEW ----
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -364,9 +342,11 @@ const ProductCard = ({
     >
       <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 h-full">
         <CardContent className="p-0">
-          {/* Image Container */}
           <div className="relative block aspect-square bg-muted overflow-hidden">
-            <Link href={`/products/${product.slug}`} className="block w-full h-full">
+            <Link
+              href={`/shop/${product.slug}`}
+              className="block w-full h-full"
+            >
               {product.mainImage ? (
                 <Image
                   src={product.mainImage}
@@ -381,10 +361,11 @@ const ProductCard = ({
               )}
             </Link>
 
-            {/* Badges */}
             <div className="absolute top-3 left-3 flex flex-col gap-2 pointer-events-none">
               {product.isFlashDeal && (
-                <Badge className="bg-orange-500 hover:bg-orange-600">FLASH</Badge>
+                <Badge className="bg-orange-500 hover:bg-orange-600">
+                  FLASH
+                </Badge>
               )}
               {discount > 0 && (
                 <Badge className="bg-destructive hover:bg-destructive">
@@ -398,7 +379,6 @@ const ProductCard = ({
               )}
             </div>
 
-            {/* Quick Actions */}
             <div className="absolute top-3 right-3 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
               <motion.button
                 whileHover={{ scale: 1.1 }}
@@ -414,7 +394,7 @@ const ProductCard = ({
                   className={`w-4 h-4 ${inWishlist ? "fill-current" : ""}`}
                 />
               </motion.button>
-              <Link href={`/products/${product.slug}`}>
+              <Link href={`/shop/${product.slug}`}>
                 <motion.div
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
@@ -425,7 +405,6 @@ const ProductCard = ({
               </Link>
             </div>
 
-            {/* Out of Stock Overlay */}
             {product.stockQuantity === 0 && (
               <div className="absolute inset-0 bg-black/50 flex items-center justify-center pointer-events-none">
                 <span className="bg-white text-black px-4 py-2 rounded-full font-medium">
@@ -435,21 +414,18 @@ const ProductCard = ({
             )}
           </div>
 
-          {/* Content */}
           <div className="p-4">
-            {/* Brand & Category */}
             <p className="text-xs text-muted-foreground mb-1">
-              {product.brand?.name || "No Brand"} • {product.category?.name || "Uncategorized"}
+              {product.brandName || "No Brand"} •{" "}
+              {product.categoryName || "Uncategorized"}
             </p>
 
-            {/* Name */}
             <Link href={`/shop/${product.slug}`}>
               <h3 className="font-medium text-sm line-clamp-2 min-h-[40px] hover:text-primary transition-colors">
                 {product.name}
               </h3>
             </Link>
 
-            {/* Rating */}
             <div className="flex items-center gap-1 mt-2">
               {[...Array(5)].map((_, i) => (
                 <Star
@@ -466,7 +442,6 @@ const ProductCard = ({
               </span>
             </div>
 
-            {/* Price */}
             <div className="flex items-center gap-2 mt-2">
               <span className="text-lg font-bold text-primary">
                 ৳{price.toLocaleString()}
@@ -478,7 +453,6 @@ const ProductCard = ({
               )}
             </div>
 
-            {/* Add to Cart Button */}
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
@@ -534,7 +508,6 @@ const ProductSkeleton = ({ viewMode }: { viewMode: "grid" | "list" }) => {
       </Card>
     );
   }
-
   return (
     <Card className="overflow-hidden">
       <CardContent className="p-0">
@@ -561,47 +534,39 @@ const MobileFilterDrawer = ({
   isOpen: boolean;
   onClose: () => void;
   children: React.ReactNode;
-}) => {
-  return (
-    <AnimatePresence>
-      {isOpen && (
-        <>
-          {/* Backdrop */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-            onClick={onClose}
-          />
-
-          {/* Drawer */}
-          <motion.div
-            initial={{ x: "-100%" }}
-            animate={{ x: 0 }}
-            exit={{ x: "-100%" }}
-            transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="fixed inset-y-0 left-0 w-[85%] max-w-sm bg-background z-50 lg:hidden overflow-y-auto"
-          >
-            <div className="sticky top-0 bg-background border-b border-border p-4 flex items-center justify-between">
-              <h2 className="text-lg font-semibold flex items-center gap-2">
-                <Filter className="w-5 h-5" />
-                Filters
-              </h2>
-              <button
-                onClick={onClose}
-                className="p-2 rounded-lg hover:bg-muted"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="p-4">{children}</div>
-          </motion.div>
-        </>
-      )}
-    </AnimatePresence>
-  );
-};
+}) => (
+  <AnimatePresence>
+    {isOpen && (
+      <>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          onClick={onClose}
+        />
+        <motion.div
+          initial={{ x: "-100%" }}
+          animate={{ x: 0 }}
+          exit={{ x: "-100%" }}
+          transition={{ type: "spring", damping: 25, stiffness: 300 }}
+          className="fixed inset-y-0 left-0 w-[85%] max-w-sm bg-background z-50 lg:hidden overflow-y-auto"
+        >
+          <div className="sticky top-0 bg-background border-b border-border p-4 flex items-center justify-between">
+            <h2 className="text-lg font-semibold flex items-center gap-2">
+              <Filter className="w-5 h-5" />
+              Filters
+            </h2>
+            <button onClick={onClose} className="p-2 rounded-lg hover:bg-muted">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+          <div className="p-4">{children}</div>
+        </motion.div>
+      </>
+    )}
+  </AnimatePresence>
+);
 
 // Category Tree Component
 const CategoryTree = ({
@@ -612,7 +577,7 @@ const CategoryTree = ({
 }: {
   categories: Category[];
   selectedCategory: string;
-  onSelect: (slug: string) => void;
+  onSelect: (id: string) => void;
   level?: number;
 }) => {
   const [expanded, setExpanded] = useState<string[]>([]);
@@ -630,7 +595,7 @@ const CategoryTree = ({
       {categories.map((category) => {
         const hasChildren = category.children && category.children.length > 0;
         const isExpanded = expanded.includes(category.categoryId);
-        const isSelected = selectedCategory === category.slug;
+        const isSelected = selectedCategory === category.categoryId;
 
         return (
           <div key={category.categoryId}>
@@ -643,7 +608,7 @@ const CategoryTree = ({
             >
               <span
                 className="text-sm flex-1"
-                onClick={() => onSelect(category.slug)}
+                onClick={() => onSelect(category.categoryId)}
               >
                 {category.name}
               </span>
@@ -662,11 +627,8 @@ const CategoryTree = ({
                   />
                 </button>
               )}
-              {isSelected && !hasChildren && (
-                <Check className="w-4 h-4" />
-              )}
+              {isSelected && !hasChildren && <Check className="w-4 h-4" />}
             </div>
-
             {hasChildren && isExpanded && (
               <CategoryTree
                 categories={category.children!}
@@ -682,7 +644,9 @@ const CategoryTree = ({
   );
 };
 
+// ======================
 // Main Shop Page
+// ======================
 export default function ShopPage() {
   const router = useRouter();
   const pathname = usePathname();
@@ -697,20 +661,19 @@ export default function ShopPage() {
   const [totalProducts, setTotalProducts] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
 
-  // Filter state from URL
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
 
   // Get filter values from URL
   const currentPage = parseInt(searchParams.get("page") || "1");
   const searchQuery = searchParams.get("search") || "";
-  const categorySlug = searchParams.get("category") || "";
-  const brandIds = searchParams.get("brands")?.split(",").filter(Boolean) || [];
+  const categoryId = searchParams.get("categoryId") || "";
+  const brandIds =
+    searchParams.get("brands")?.split(",").filter(Boolean) || [];
   const minPrice = parseInt(searchParams.get("minPrice") || "0");
   const maxPrice = parseInt(searchParams.get("maxPrice") || "500000");
   const sortBy = searchParams.get("sortBy") || "createdAt";
   const sortOrder = searchParams.get("sortOrder") || "desc";
-  const inStock = searchParams.get("inStock") === "true";
   const featured = searchParams.get("featured") === "true";
   const flashDeal = searchParams.get("flashDeal") === "true";
 
@@ -722,14 +685,18 @@ export default function ShopPage() {
       const params = new URLSearchParams(searchParams.toString());
 
       Object.entries(updates).forEach(([key, value]) => {
-        if (value === null || value === "" || value === "0" || value === "500000") {
+        if (
+          value === null ||
+          value === "" ||
+          value === "0" ||
+          value === "500000"
+        ) {
           params.delete(key);
         } else {
           params.set(key, value);
         }
       });
 
-      // Reset to page 1 when filters change (except when changing page)
       if (!updates.hasOwnProperty("page")) {
         params.delete("page");
       }
@@ -746,8 +713,10 @@ export default function ShopPage() {
         const response = await fetch("/api/categories?limit=100");
         const data: ApiResponse<Category[]> = await response.json();
         if (data.success) {
-          // Build tree structure
-          const buildTree = (items: Category[], parentId: string | null = null): Category[] => {
+          const buildTree = (
+            items: Category[],
+            parentId: string | null = null
+          ): Category[] => {
             return items
               .filter((item) => item.parentId === parentId)
               .map((item) => ({
@@ -761,7 +730,6 @@ export default function ShopPage() {
         console.error("Error fetching categories:", error);
       }
     };
-
     fetchCategories();
   }, []);
 
@@ -778,7 +746,6 @@ export default function ShopPage() {
         console.error("Error fetching brands:", error);
       }
     };
-
     fetchBrands();
   }, []);
 
@@ -793,31 +760,15 @@ export default function ShopPage() {
         params.set("limit", itemsPerPage.toString());
         params.set("sortBy", sortBy);
         params.set("sortOrder", sortOrder);
-        params.set("isActive", "true");
-        params.set("status", "approved");
+        // NOTE: No need to pass status/isActive — the public API hardcodes approved+active
 
         if (searchQuery) params.set("search", searchQuery);
-        if (categorySlug) {
-          // Find category ID from slug
-          const findCategory = (cats: Category[], slug: string): Category | null => {
-            for (const cat of cats) {
-              if (cat.slug === slug) return cat;
-              if (cat.children) {
-                const found = findCategory(cat.children, slug);
-                if (found) return found;
-              }
-            }
-            return null;
-          };
-          const category = findCategory(categories, categorySlug);
-          if (category) params.set("categoryId", category.categoryId);
-        }
-        if (brandIds.length > 0) params.set("brandId", brandIds[0]); // API supports single brand for now
+        if (categoryId) params.set("categoryId", categoryId);
+        if (brandIds.length > 0) params.set("brandId", brandIds[0]);
         if (minPrice > 0) params.set("minPrice", minPrice.toString());
         if (maxPrice < 500000) params.set("maxPrice", maxPrice.toString());
-        if (inStock) params.set("inStock", "true");
-        if (featured) params.set("isFeatured", "true");
-        if (flashDeal) params.set("isFlashDeal", "true");
+        if (featured) params.set("featured", "true");
+        if (flashDeal) params.set("flashDeal", "true");
 
         const response = await fetch(`/api/products?${params.toString()}`);
         const data: ApiResponse<Product[]> = await response.json();
@@ -840,19 +791,17 @@ export default function ShopPage() {
   }, [
     currentPage,
     searchQuery,
-    categorySlug,
-    brandIds,
+    categoryId,
+    brandIds.join(","),
     minPrice,
     maxPrice,
     sortBy,
     sortOrder,
-    inStock,
     featured,
     flashDeal,
-    categories,
   ]);
 
-  // Handle search with debounce
+  // Search debounce
   const [searchInput, setSearchInput] = useState(searchQuery);
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -860,11 +809,10 @@ export default function ShopPage() {
         updateFilters({ search: searchInput || null });
       }
     }, 500);
-
     return () => clearTimeout(timer);
   }, [searchInput]);
 
-  // Price range state
+  // Price range
   const [priceRange, setPriceRange] = useState([minPrice, maxPrice]);
   useEffect(() => {
     setPriceRange([minPrice, maxPrice]);
@@ -881,28 +829,45 @@ export default function ShopPage() {
     });
   }, [priceRange, updateFilters]);
 
-  // Handle brand selection
   const handleBrandChange = (brandId: string, checked: boolean) => {
     const newBrands = checked
       ? [...brandIds, brandId]
       : brandIds.filter((id) => id !== brandId);
-    updateFilters({ brands: newBrands.length > 0 ? newBrands.join(",") : null });
+    updateFilters({
+      brands: newBrands.length > 0 ? newBrands.join(",") : null,
+    });
   };
 
-  // Clear all filters
   const clearAllFilters = () => {
     router.push(pathname);
     setSearchInput("");
     setPriceRange([0, 500000]);
   };
 
-  // Active filters count
+  // Find category name by ID for display
+  const findCategoryName = (
+    cats: Category[],
+    id: string
+  ): string | null => {
+    for (const cat of cats) {
+      if (cat.categoryId === id) return cat.name;
+      if (cat.children) {
+        const found = findCategoryName(cat.children, id);
+        if (found) return found;
+      }
+    }
+    return null;
+  };
+
+  const selectedCategoryName = categoryId
+    ? findCategoryName(categories, categoryId)
+    : null;
+
   const activeFiltersCount =
     (searchQuery ? 1 : 0) +
-    (categorySlug ? 1 : 0) +
+    (categoryId ? 1 : 0) +
     brandIds.length +
     (minPrice > 0 || maxPrice < 500000 ? 1 : 0) +
-    (inStock ? 1 : 0) +
     (featured ? 1 : 0) +
     (flashDeal ? 1 : 0);
 
@@ -929,9 +894,11 @@ export default function ShopPage() {
         {categories.length > 0 ? (
           <CategoryTree
             categories={categories}
-            selectedCategory={categorySlug}
-            onSelect={(slug) =>
-              updateFilters({ category: slug === categorySlug ? null : slug })
+            selectedCategory={categoryId}
+            onSelect={(id) =>
+              updateFilters({
+                categoryId: id === categoryId ? null : id,
+              })
             }
           />
         ) : (
@@ -1021,18 +988,6 @@ export default function ShopPage() {
         <div className="space-y-2">
           <div className="flex items-center space-x-2">
             <Checkbox
-              id="inStock"
-              checked={inStock}
-              onCheckedChange={(checked) =>
-                updateFilters({ inStock: checked ? "true" : null })
-              }
-            />
-            <label htmlFor="inStock" className="text-sm cursor-pointer">
-              In Stock Only
-            </label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Checkbox
               id="featured"
               checked={featured}
               onCheckedChange={(checked) =>
@@ -1060,11 +1015,7 @@ export default function ShopPage() {
 
       {/* Clear Filters */}
       {activeFiltersCount > 0 && (
-        <Button
-          variant="outline"
-          className="w-full"
-          onClick={clearAllFilters}
-        >
+        <Button variant="outline" className="w-full" onClick={clearAllFilters}>
           Clear All Filters ({activeFiltersCount})
         </Button>
       )}
@@ -1082,10 +1033,10 @@ export default function ShopPage() {
             </Link>
             <span className="mx-2">›</span>
             <span className="text-foreground">Shop</span>
-            {categorySlug && (
+            {selectedCategoryName && (
               <>
                 <span className="mx-2">›</span>
-                <span className="text-foreground capitalize">{categorySlug.replace(/-/g, " ")}</span>
+                <span className="text-foreground">{selectedCategoryName}</span>
               </>
             )}
           </nav>
@@ -1124,7 +1075,6 @@ export default function ShopPage() {
               transition={{ duration: 0.5 }}
             >
               <div className="flex items-center gap-4">
-                {/* Mobile Filter Button */}
                 <Button
                   variant="outline"
                   size="sm"
@@ -1168,7 +1118,6 @@ export default function ShopPage() {
               </div>
 
               <div className="flex items-center gap-3 w-full sm:w-auto">
-                {/* View Mode Toggle */}
                 <div className="flex items-center border border-border rounded-lg p-1">
                   <button
                     onClick={() => setViewMode("grid")}
@@ -1192,12 +1141,14 @@ export default function ShopPage() {
                   </button>
                 </div>
 
-                {/* Sort */}
                 <Select
                   value={`${sortBy}-${sortOrder}`}
                   onValueChange={(value) => {
                     const [newSortBy, newSortOrder] = value.split("-");
-                    updateFilters({ sortBy: newSortBy, sortOrder: newSortOrder });
+                    updateFilters({
+                      sortBy: newSortBy,
+                      sortOrder: newSortOrder,
+                    });
                   }}
                 >
                   <SelectTrigger className="w-44">
@@ -1206,10 +1157,10 @@ export default function ShopPage() {
                   <SelectContent>
                     <SelectItem value="createdAt-desc">Newest First</SelectItem>
                     <SelectItem value="createdAt-asc">Oldest First</SelectItem>
-                    <SelectItem value="salePrice-asc">Price: Low to High</SelectItem>
-                    <SelectItem value="salePrice-desc">Price: High to Low</SelectItem>
-                    <SelectItem value="averageRating-desc">Highest Rated</SelectItem>
-                    <SelectItem value="soldCount-desc">Best Selling</SelectItem>
+                    <SelectItem value="price-asc">Price: Low to High</SelectItem>
+                    <SelectItem value="price-desc">Price: High to Low</SelectItem>
+                    <SelectItem value="rating-desc">Highest Rated</SelectItem>
+                    <SelectItem value="popularity-desc">Best Selling</SelectItem>
                     <SelectItem value="name-asc">Name A-Z</SelectItem>
                     <SelectItem value="name-desc">Name Z-A</SelectItem>
                   </SelectContent>
@@ -1237,26 +1188,26 @@ export default function ShopPage() {
                     <X className="w-3 h-3 ml-2" />
                   </Badge>
                 )}
-                {categorySlug && (
+                {categoryId && selectedCategoryName && (
                   <Badge
                     variant="secondary"
                     className="px-3 py-1 cursor-pointer"
-                    onClick={() => updateFilters({ category: null })}
+                    onClick={() => updateFilters({ categoryId: null })}
                   >
-                    Category: {categorySlug.replace(/-/g, " ")}
+                    Category: {selectedCategoryName}
                     <X className="w-3 h-3 ml-2" />
                   </Badge>
                 )}
-                {brandIds.map((brandId) => {
-                  const brand = brands.find((b) => b.brandId === brandId);
+                {brandIds.map((bId) => {
+                  const brand = brands.find((b) => b.brandId === bId);
                   return (
                     <Badge
-                      key={brandId}
+                      key={bId}
                       variant="secondary"
                       className="px-3 py-1 cursor-pointer"
-                      onClick={() => handleBrandChange(brandId, false)}
+                      onClick={() => handleBrandChange(bId, false)}
                     >
-                      {brand?.name || brandId}
+                      {brand?.name || bId}
                       <X className="w-3 h-3 ml-2" />
                     </Badge>
                   );
@@ -1271,16 +1222,6 @@ export default function ShopPage() {
                     }}
                   >
                     ৳{minPrice.toLocaleString()} - ৳{maxPrice.toLocaleString()}
-                    <X className="w-3 h-3 ml-2" />
-                  </Badge>
-                )}
-                {inStock && (
-                  <Badge
-                    variant="secondary"
-                    className="px-3 py-1 cursor-pointer"
-                    onClick={() => updateFilters({ inStock: null })}
-                  >
-                    In Stock
                     <X className="w-3 h-3 ml-2" />
                   </Badge>
                 )}
@@ -1353,7 +1294,9 @@ export default function ShopPage() {
                 animate={{ opacity: 1 }}
               >
                 <Package className="w-16 h-16 text-muted-foreground/30 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No products found</h3>
+                <h3 className="text-lg font-semibold mb-2">
+                  No products found
+                </h3>
                 <p className="text-muted-foreground mb-6">
                   Try adjusting your filters or search terms
                 </p>
@@ -1372,7 +1315,9 @@ export default function ShopPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => updateFilters({ page: (currentPage - 1).toString() })}
+                  onClick={() =>
+                    updateFilters({ page: (currentPage - 1).toString() })
+                  }
                   disabled={currentPage === 1}
                 >
                   Previous
@@ -1389,9 +1334,13 @@ export default function ShopPage() {
                       return (
                         <Button
                           key={page}
-                          variant={currentPage === page ? "default" : "outline"}
+                          variant={
+                            currentPage === page ? "default" : "outline"
+                          }
                           size="sm"
-                          onClick={() => updateFilters({ page: page.toString() })}
+                          onClick={() =>
+                            updateFilters({ page: page.toString() })
+                          }
                           className="w-10"
                         >
                           {page}
@@ -1402,7 +1351,10 @@ export default function ShopPage() {
                       page === currentPage + 2
                     ) {
                       return (
-                        <span key={page} className="px-2 text-muted-foreground">
+                        <span
+                          key={page}
+                          className="px-2 text-muted-foreground"
+                        >
                           ...
                         </span>
                       );
@@ -1414,7 +1366,9 @@ export default function ShopPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => updateFilters({ page: (currentPage + 1).toString() })}
+                  onClick={() =>
+                    updateFilters({ page: (currentPage + 1).toString() })
+                  }
                   disabled={currentPage === totalPages}
                 >
                   Next

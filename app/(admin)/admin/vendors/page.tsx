@@ -62,7 +62,6 @@ import {
   Package,
   ShoppingCart,
   DollarSign,
-  Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -106,7 +105,11 @@ interface StatusCounts {
 
 const statusConfig: Record<
   string,
-  { label: string; icon: any; variant: "default" | "secondary" | "destructive" | "outline" }
+  {
+    label: string;
+    icon: any;
+    variant: "default" | "secondary" | "destructive" | "outline";
+  }
 > = {
   pending: { label: "Pending", icon: Clock, variant: "outline" },
   approved: { label: "Approved", icon: CheckCircle, variant: "default" },
@@ -156,7 +159,8 @@ export default function AdminVendorsPage() {
       });
 
       if (searchQuery) params.set("search", searchQuery);
-      if (statusFilter && statusFilter !== "all") params.set("status", statusFilter);
+      if (statusFilter && statusFilter !== "all")
+        params.set("status", statusFilter);
 
       const response = await fetch(`/api/admin/vendors?${params.toString()}`);
       const data = await response.json();
@@ -215,7 +219,7 @@ export default function AdminVendorsPage() {
     setIsSubmitting(true);
     try {
       const vendorIds = actionVendor ? [actionVendor.vendorId] : selectedIds;
-      
+
       const response = await fetch("/api/admin/vendors", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -278,7 +282,9 @@ export default function AdminVendorsPage() {
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Vendors</h1>
-          <p className="text-muted-foreground">Manage vendor applications and profiles</p>
+          <p className="text-muted-foreground">
+            Manage vendor applications and profiles
+          </p>
         </div>
       </div>
 
@@ -289,7 +295,11 @@ export default function AdminVendorsPage() {
           { label: "Pending", value: counts.pending, color: "bg-yellow-500" },
           { label: "Approved", value: counts.approved, color: "bg-green-500" },
           { label: "Rejected", value: counts.rejected, color: "bg-red-500" },
-          { label: "Suspended", value: counts.suspended, color: "bg-orange-500" },
+          {
+            label: "Suspended",
+            value: counts.suspended,
+            color: "bg-orange-500",
+          },
         ].map((stat) => (
           <Card key={stat.label}>
             <CardContent className="p-4">
@@ -333,24 +343,34 @@ export default function AdminVendorsPage() {
                     <DropdownMenuContent align="end" className="w-48">
                       <DropdownMenuLabel>Actions</DropdownMenuLabel>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => openActionDialog("approve")}>
+                      <DropdownMenuItem
+                        onClick={() => openActionDialog("approve")}
+                      >
                         <CheckCircle className="mr-2 h-4 w-4 text-green-500" />
                         Approve
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => openActionDialog("reject")}>
+                      <DropdownMenuItem
+                        onClick={() => openActionDialog("reject")}
+                      >
                         <XCircle className="mr-2 h-4 w-4 text-red-500" />
                         Reject
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => openActionDialog("suspend")}>
+                      <DropdownMenuItem
+                        onClick={() => openActionDialog("suspend")}
+                      >
                         <Ban className="mr-2 h-4 w-4 text-orange-500" />
                         Suspend
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => openActionDialog("verify")}>
+                      <DropdownMenuItem
+                        onClick={() => openActionDialog("verify")}
+                      >
                         <Shield className="mr-2 h-4 w-4 text-blue-500" />
                         Verify
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => openActionDialog("feature")}>
+                      <DropdownMenuItem
+                        onClick={() => openActionDialog("feature")}
+                      >
                         <Star className="mr-2 h-4 w-4 text-yellow-500" />
                         Feature
                       </DropdownMenuItem>
@@ -363,19 +383,35 @@ export default function AdminVendorsPage() {
                   onClick={fetchVendors}
                   disabled={isLoading}
                 >
-                  <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
+                  <RefreshCw
+                    className={cn("h-4 w-4", isLoading && "animate-spin")}
+                  />
                 </Button>
               </div>
             </div>
 
             {/* Status Tabs */}
-            <Tabs value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setPage(1); }}>
+            <Tabs
+              value={statusFilter}
+              onValueChange={(v) => {
+                setStatusFilter(v);
+                setPage(1);
+              }}
+            >
               <TabsList>
                 <TabsTrigger value="all">All ({counts.all})</TabsTrigger>
-                <TabsTrigger value="pending">Pending ({counts.pending})</TabsTrigger>
-                <TabsTrigger value="approved">Approved ({counts.approved})</TabsTrigger>
-                <TabsTrigger value="rejected">Rejected ({counts.rejected})</TabsTrigger>
-                <TabsTrigger value="suspended">Suspended ({counts.suspended})</TabsTrigger>
+                <TabsTrigger value="pending">
+                  Pending ({counts.pending})
+                </TabsTrigger>
+                <TabsTrigger value="approved">
+                  Approved ({counts.approved})
+                </TabsTrigger>
+                <TabsTrigger value="rejected">
+                  Rejected ({counts.rejected})
+                </TabsTrigger>
+                <TabsTrigger value="suspended">
+                  Suspended ({counts.suspended})
+                </TabsTrigger>
               </TabsList>
             </Tabs>
           </div>
@@ -391,7 +427,10 @@ export default function AdminVendorsPage() {
                 <TableRow>
                   <TableHead className="w-12">
                     <Checkbox
-                      checked={selectedIds.length === vendors.length && vendors.length > 0}
+                      checked={
+                        selectedIds.length === vendors.length &&
+                        vendors.length > 0
+                      }
                       onCheckedChange={toggleSelectAll}
                     />
                   </TableHead>
@@ -423,14 +462,17 @@ export default function AdminVendorsPage() {
                   </TableRow>
                 ) : (
                   vendors.map((vendor) => {
-                    const StatusIcon = statusConfig[vendor.status]?.icon || Clock;
+                    const StatusIcon =
+                      statusConfig[vendor.status]?.icon || Clock;
 
                     return (
                       <TableRow key={vendor.vendorId}>
                         <TableCell>
                           <Checkbox
                             checked={selectedIds.includes(vendor.vendorId)}
-                            onCheckedChange={() => toggleSelect(vendor.vendorId)}
+                            onCheckedChange={() =>
+                              toggleSelect(vendor.vendorId)
+                            }
                           />
                         </TableCell>
                         <TableCell>
@@ -448,7 +490,9 @@ export default function AdminVendorsPage() {
                             )}
                             <div className="min-w-0">
                               <div className="flex items-center gap-2">
-                                <p className="font-medium truncate">{vendor.shopName}</p>
+                                <p className="font-medium truncate">
+                                  {vendor.shopName}
+                                </p>
                                 {vendor.isFeatured && (
                                   <Star className="h-3 w-3 text-yellow-500 fill-yellow-500" />
                                 )}
@@ -464,7 +508,9 @@ export default function AdminVendorsPage() {
                             {vendor.businessEmail && (
                               <div className="flex items-center gap-1 text-muted-foreground">
                                 <Mail className="h-3 w-3" />
-                                <span className="truncate max-w-[120px]">{vendor.businessEmail}</span>
+                                <span className="truncate max-w-[120px]">
+                                  {vendor.businessEmail}
+                                </span>
                               </div>
                             )}
                             {vendor.businessPhone && (
@@ -488,7 +534,11 @@ export default function AdminVendorsPage() {
                           </div>
                         </TableCell>
                         <TableCell className="text-center">
-                          <Badge variant={statusConfig[vendor.status]?.variant || "secondary"}>
+                          <Badge
+                            variant={
+                              statusConfig[vendor.status]?.variant || "secondary"
+                            }
+                          >
                             <StatusIcon className="h-3 w-3 mr-1" />
                             {statusConfig[vendor.status]?.label || vendor.status}
                           </Badge>
@@ -502,7 +552,9 @@ export default function AdminVendorsPage() {
                         </TableCell>
                         <TableCell>
                           <span className="text-sm text-muted-foreground">
-                            {formatDistanceToNow(new Date(vendor.createdAt), { addSuffix: true })}
+                            {formatDistanceToNow(new Date(vendor.createdAt), {
+                              addSuffix: true,
+                            })}
                           </span>
                         </TableCell>
                         <TableCell>
@@ -513,12 +565,17 @@ export default function AdminVendorsPage() {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-48">
-                              <DropdownMenuItem onClick={() => viewVendorDetails(vendor)}>
+                              <DropdownMenuItem
+                                onClick={() => viewVendorDetails(vendor)}
+                              >
                                 <Eye className="mr-2 h-4 w-4" />
                                 View Details
                               </DropdownMenuItem>
                               <DropdownMenuItem asChild>
-                                <a href={`/shop/${vendor.shopSlug}`} target="_blank">
+                                <a
+                                  href={`/shop/${vendor.shopSlug}`}
+                                  target="_blank"
+                                >
                                   <ExternalLink className="mr-2 h-4 w-4" />
                                   View Shop
                                 </a>
@@ -526,47 +583,80 @@ export default function AdminVendorsPage() {
                               <DropdownMenuSeparator />
                               {vendor.status === "pending" && (
                                 <>
-                                  <DropdownMenuItem onClick={() => openActionDialog("approve", vendor)}>
+                                  <DropdownMenuItem
+                                    onClick={() =>
+                                      openActionDialog("approve", vendor)
+                                    }
+                                  >
                                     <CheckCircle className="mr-2 h-4 w-4 text-green-500" />
                                     Approve
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => openActionDialog("reject", vendor)}>
+                                  <DropdownMenuItem
+                                    onClick={() =>
+                                      openActionDialog("reject", vendor)
+                                    }
+                                  >
                                     <XCircle className="mr-2 h-4 w-4 text-red-500" />
                                     Reject
                                   </DropdownMenuItem>
                                 </>
                               )}
                               {vendor.status === "approved" && (
-                                <DropdownMenuItem onClick={() => openActionDialog("suspend", vendor)}>
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    openActionDialog("suspend", vendor)
+                                  }
+                                >
                                   <Ban className="mr-2 h-4 w-4 text-orange-500" />
                                   Suspend
                                 </DropdownMenuItem>
                               )}
-                              {(vendor.status === "rejected" || vendor.status === "suspended") && (
-                                <DropdownMenuItem onClick={() => openActionDialog("approve", vendor)}>
+                              {(vendor.status === "rejected" ||
+                                vendor.status === "suspended") && (
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    openActionDialog("approve", vendor)
+                                  }
+                                >
                                   <CheckCircle className="mr-2 h-4 w-4 text-green-500" />
                                   Re-approve
                                 </DropdownMenuItem>
                               )}
                               <DropdownMenuSeparator />
                               {vendor.isVerified ? (
-                                <DropdownMenuItem onClick={() => openActionDialog("unverify", vendor)}>
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    openActionDialog("unverify", vendor)
+                                  }
+                                >
                                   <ShieldOff className="mr-2 h-4 w-4" />
                                   Remove Verification
                                 </DropdownMenuItem>
                               ) : (
-                                <DropdownMenuItem onClick={() => openActionDialog("verify", vendor)}>
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    openActionDialog("verify", vendor)
+                                  }
+                                >
                                   <Shield className="mr-2 h-4 w-4 text-blue-500" />
                                   Verify
                                 </DropdownMenuItem>
                               )}
                               {vendor.isFeatured ? (
-                                <DropdownMenuItem onClick={() => openActionDialog("unfeature", vendor)}>
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    openActionDialog("unfeature", vendor)
+                                  }
+                                >
                                   <StarOff className="mr-2 h-4 w-4" />
                                   Remove Featured
                                 </DropdownMenuItem>
                               ) : (
-                                <DropdownMenuItem onClick={() => openActionDialog("feature", vendor)}>
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    openActionDialog("feature", vendor)
+                                  }
+                                >
                                   <Star className="mr-2 h-4 w-4 text-yellow-500" />
                                   Feature
                                 </DropdownMenuItem>
@@ -670,7 +760,9 @@ export default function AdminVendorsPage() {
                   : "default"
               }
             >
-              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isSubmitting && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
               Confirm
             </Button>
           </DialogFooter>
@@ -701,7 +793,9 @@ export default function AdminVendorsPage() {
                 )}
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
-                    <h3 className="text-xl font-semibold">{selectedVendor.shopName}</h3>
+                    <h3 className="text-xl font-semibold">
+                      {selectedVendor.shopName}
+                    </h3>
                     {selectedVendor.isVerified && (
                       <Shield className="h-5 w-5 text-blue-500" />
                     )}
@@ -709,7 +803,9 @@ export default function AdminVendorsPage() {
                       <Star className="h-5 w-5 text-yellow-500 fill-yellow-500" />
                     )}
                   </div>
-                  <p className="text-muted-foreground">@{selectedVendor.shopSlug}</p>
+                  <p className="text-muted-foreground">
+                    @{selectedVendor.shopSlug}
+                  </p>
                   <Badge
                     variant={statusConfig[selectedVendor.status]?.variant}
                     className="mt-2"
@@ -723,18 +819,25 @@ export default function AdminVendorsPage() {
               <div className="grid grid-cols-3 gap-4">
                 <div className="text-center p-4 bg-muted/50 rounded-lg">
                   <Package className="h-5 w-5 mx-auto mb-1 text-muted-foreground" />
-                  <p className="text-2xl font-bold">{selectedVendor.totalProducts}</p>
+                  <p className="text-2xl font-bold">
+                    {selectedVendor.totalProducts}
+                  </p>
                   <p className="text-xs text-muted-foreground">Products</p>
                 </div>
                 <div className="text-center p-4 bg-muted/50 rounded-lg">
                   <ShoppingCart className="h-5 w-5 mx-auto mb-1 text-muted-foreground" />
-                  <p className="text-2xl font-bold">{selectedVendor.totalOrders}</p>
+                  <p className="text-2xl font-bold">
+                    {selectedVendor.totalOrders}
+                  </p>
                   <p className="text-xs text-muted-foreground">Orders</p>
                 </div>
                 <div className="text-center p-4 bg-muted/50 rounded-lg">
                   <DollarSign className="h-5 w-5 mx-auto mb-1 text-muted-foreground" />
                   <p className="text-2xl font-bold">
-                    ৳{parseFloat(selectedVendor.totalEarnings || "0").toLocaleString()}
+                    ৳
+                    {parseFloat(
+                      selectedVendor.totalEarnings || "0"
+                    ).toLocaleString()}
                   </p>
                   <p className="text-xs text-muted-foreground">Earnings</p>
                 </div>
@@ -747,25 +850,33 @@ export default function AdminVendorsPage() {
                   {selectedVendor.businessName && (
                     <div>
                       <p className="text-muted-foreground">Business Name</p>
-                      <p className="font-medium">{selectedVendor.businessName}</p>
+                      <p className="font-medium">
+                        {selectedVendor.businessName}
+                      </p>
                     </div>
                   )}
                   {selectedVendor.businessEmail && (
                     <div>
                       <p className="text-muted-foreground">Email</p>
-                      <p className="font-medium">{selectedVendor.businessEmail}</p>
+                      <p className="font-medium">
+                        {selectedVendor.businessEmail}
+                      </p>
                     </div>
                   )}
                   {selectedVendor.businessPhone && (
                     <div>
                       <p className="text-muted-foreground">Phone</p>
-                      <p className="font-medium">{selectedVendor.businessPhone}</p>
+                      <p className="font-medium">
+                        {selectedVendor.businessPhone}
+                      </p>
                     </div>
                   )}
                   {selectedVendor.businessAddress && (
                     <div className="col-span-2">
                       <p className="text-muted-foreground">Address</p>
-                      <p className="font-medium">{selectedVendor.businessAddress}</p>
+                      <p className="font-medium">
+                        {selectedVendor.businessAddress}
+                      </p>
                     </div>
                   )}
                 </div>
@@ -775,7 +886,9 @@ export default function AdminVendorsPage() {
               {selectedVendor.description && (
                 <div className="space-y-2">
                   <h4 className="font-semibold">Description</h4>
-                  <p className="text-sm text-muted-foreground">{selectedVendor.description}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {selectedVendor.description}
+                  </p>
                 </div>
               )}
 
@@ -807,8 +920,12 @@ export default function AdminVendorsPage() {
                     </div>
                   )}
                   <div>
-                    <p className="font-medium">{selectedVendor.userName || "Unknown"}</p>
-                    <p className="text-sm text-muted-foreground">{selectedVendor.userEmail}</p>
+                    <p className="font-medium">
+                      {selectedVendor.userName || "Unknown"}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {selectedVendor.userEmail}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -816,7 +933,10 @@ export default function AdminVendorsPage() {
           )}
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDetailDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setDetailDialogOpen(false)}
+            >
               Close
             </Button>
             {selectedVendor?.status === "pending" && (

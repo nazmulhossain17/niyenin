@@ -1,10 +1,14 @@
+// ========================================
+// File: app/layout.tsx
+// Root Layout - This MUST have html and body tags
+// ========================================
+
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "sonner";
-import VendorLayout from "./vendor-layout";
-
+import AdminLayout from "./vendor-layout";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -27,7 +31,10 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <VendorLayout>{children}</VendorLayout>
+            <AdminLayout>
+                {children}
+            </AdminLayout>
+          
           <Toaster position="top-right" richColors />
         </ThemeProvider>
       </body>

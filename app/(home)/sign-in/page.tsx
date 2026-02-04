@@ -147,8 +147,8 @@ export default function SignInPage() {
     setServerError(null);
   };
 
-  // Check if user has addresses after successful login
-  const checkAndRedirect = async (role?: UserRole) => {
+  // Redirect after successful login based on role
+  const redirectAfterLogin = (role?: UserRole) => {
     // Admin and vendor users go directly to their dashboards
     if (role === "super_admin" || role === "admin") {
       router.push("/admin");
@@ -160,23 +160,9 @@ export default function SignInPage() {
       return;
     }
 
-    // For customers, check if they have addresses
-    try {
-      const response = await fetch("/api/user/addresses");
-      const result = await response.json();
-
-      if (result.success && result.data && result.data.length > 0) {
-        // User has addresses, redirect to callback URL or home
-        router.push(callbackUrl);
-      } else {
-        // User has no addresses, redirect to address setup
-        router.push(`/profile/addresses/setup?returnTo=${encodeURIComponent(callbackUrl)}`);
-      }
-    } catch (error) {
-      console.error("Error checking addresses:", error);
-      // On error, still redirect to home but let the auth provider handle it
-      router.push(callbackUrl);
-    }
+    // For customers, just redirect to callback URL
+    // The auth provider will handle address check for checkout routes
+    router.push(callbackUrl);
   };
 
   // Email/Password Sign In
@@ -204,8 +190,8 @@ export default function SignInPage() {
       // Type assertion since we know our schema has role field
       const role = (data?.user as { role?: UserRole })?.role;
       
-      // Check addresses and redirect appropriately
-      await checkAndRedirect(role);
+      // Redirect based on role
+      redirectAfterLogin(role);
     } catch (error: unknown) {
       console.error("Login error:", error);
       const errorMessage =

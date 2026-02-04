@@ -40,7 +40,7 @@ import {
 import Link from "next/link";
 import { useTheme } from "next-themes";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { authClient, type User as AuthUser, type UserRole } from "@/lib/auth-client";
 import { useCart } from "@/context/cart-context";
 import { useWishlist } from "@/context/wishlist-context";
@@ -67,7 +67,7 @@ const UserAvatar = ({ user, size = "md" }: { user: { name?: string | null; email
     return email ? email.substring(0, 2).toUpperCase() : "U";
   };
   if (user.image) return <Image src={user.image} alt={user.name || "User"} width={40} height={40} className={`${sizeClasses[size]} rounded-full object-cover border-2 border-primary`} />;
-  return <div className={`${sizeClasses[size]} rounded-full bg-gradient-to-br from-primary to-brand flex items-center justify-center text-white font-semibold border-2 border-primary/20`}>{getInitials(user.name, user.email)}</div>;
+  return <div className={`${sizeClasses[size]} rounded-full bg-linear-to-br from-primary to-brand flex items-center justify-center text-white font-semibold border-2 border-primary/20`}>{getInitials(user.name, user.email)}</div>;
 };
 
 const SearchBar = ({ isOpen, onClose, isMobile = false }: { isOpen: boolean; onClose: () => void; isMobile?: boolean }) => {
@@ -255,6 +255,7 @@ const CategoryMenu = ({ categories, isLoading, isOpen, onClose, isMobile = false
 
 const Header = () => {
   const router = useRouter();
+  const pathname = usePathname();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -281,7 +282,22 @@ const Header = () => {
   }, [categoriesFetched]);
 
   useEffect(() => { if ((isCategoryMenuOpen || isMobileCategoryOpen) && !categoriesFetched) fetchCategories(); }, [isCategoryMenuOpen, isMobileCategoryOpen, categoriesFetched, fetchCategories]);
-  useEffect(() => { const checkSession = async () => { try { const { data: session } = await authClient.getSession(); setUser(session?.user || null); } catch (e) { setUser(null); } finally { setIsLoading(false); } }; checkSession(); }, []);
+  
+  // Re-check session on mount AND when pathname changes (after login redirect)
+  useEffect(() => { 
+    const checkSession = async () => { 
+      try { 
+        const { data: session } = await authClient.getSession(); 
+        setUser(session?.user || null); 
+      } catch (e) { 
+        setUser(null); 
+      } finally { 
+        setIsLoading(false); 
+      } 
+    }; 
+    checkSession(); 
+  }, [pathname]); // Re-run when route changes
+  
   useEffect(() => { setMounted(true); }, []);
   useEffect(() => { const handleKeyDown = (e: KeyboardEvent) => { if ((e.ctrlKey || e.metaKey) && e.key === "k") { e.preventDefault(); setIsSearchOpen(true); } }; document.addEventListener("keydown", handleKeyDown); return () => document.removeEventListener("keydown", handleKeyDown); }, []);
   useEffect(() => { const handleClickOutside = (e: MouseEvent) => { if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) setIsUserMenuOpen(false); if (categoryMenuRef.current && !categoryMenuRef.current.contains(e.target as Node)) setIsCategoryMenuOpen(false); }; document.addEventListener("mousedown", handleClickOutside); return () => document.removeEventListener("mousedown", handleClickOutside); }, []);

@@ -1,23 +1,32 @@
 // ========================================
 // File: middleware.ts (root directory)
-// Authentication & Address Check Middleware
+// Authentication & Role-Based Access Middleware
 // ========================================
 
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionCookie } from "better-auth/cookies";
 
-// Routes that require authentication
+// ============================================
+// ROUTE CONFIGURATION
+// ============================================
+
+// Dashboard routes with their required roles
+const dashboardRoutes = {
+  "/admin": ["admin", "super_admin"],
+  "/vendor": ["vendor", "admin", "super_admin"],
+  "/customer": ["customer", "vendor", "admin", "super_admin"], // Any authenticated user
+};
+
+// Routes that require authentication (any role)
 const protectedRoutes = [
-  "/dashboard",
   "/profile",
   "/orders",
   "/wishlist",
   "/checkout",
-  "/vendor",
-  "/admin",
+  "/customer",
 ];
 
-// Routes that require address to be set (after login)
+// Routes that require address to be set (handled client-side)
 const addressRequiredRoutes = ["/checkout"];
 
 // Routes only for unauthenticated users
@@ -28,24 +37,50 @@ const authRoutes = [
   "/reset-password",
 ];
 
-// Routes to skip address check (allow access even without address)
+// Routes to skip address check
 const addressSetupRoutes = ["/profile/addresses/setup", "/profile/addresses"];
 
-// Public routes that don't need any checks
+// Public routes (no auth needed)
 const publicRoutes = [
   "/",
+  "/shop",
   "/products",
   "/categories",
+  "/brands",
   "/vendors",
   "/about",
   "/contact",
   "/faq",
+  "/cart",
 ];
+
+// ============================================
+// HELPER FUNCTIONS
+// ============================================
+
+function isRouteMatch(pathname: string, routes: string[]): boolean {
+  return routes.some(
+    (route) => pathname === route || pathname.startsWith(`${route}/`)
+  );
+}
+
+function getDashboardRoute(pathname: string): string | null {
+  for (const route of Object.keys(dashboardRoutes)) {
+    if (pathname === route || pathname.startsWith(`${route}/`)) {
+      return route;
+    }
+  }
+  return null;
+}
+
+// ============================================
+// MIDDLEWARE
+// ============================================
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Skip API routes and static files
+  // Skip API routes, static files, and public assets
   if (
     pathname.startsWith("/api") ||
     pathname.startsWith("/_next") ||
@@ -55,46 +90,61 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Get session cookie (optimistic check - fast but not fully secure)
-  // Full validation should happen in the actual page/API
+  // Get session cookie (optimistic check)
   const sessionCookie = getSessionCookie(request);
+  const isAuthenticated = !!sessionCookie;
 
-  // Check if current route is protected
-  const isProtectedRoute = protectedRoutes.some(
-    (route) => pathname === route || pathname.startsWith(`${route}/`)
-  );
+  // ----------------------------------------
+  // Check if it's an auth route (sign-in, sign-up, etc.)
+  // ----------------------------------------
+  const isAuthRoute = isRouteMatch(pathname, authRoutes);
+  
+  if (isAuthRoute && isAuthenticated) {
+    // Authenticated users shouldn't access auth routes
+    return NextResponse.redirect(new URL("/", request.url));
+  }
 
-  // Check if current route is auth route (sign-in, sign-up, etc.)
-  const isAuthRoute = authRoutes.some(
-    (route) => pathname === route || pathname.startsWith(`${route}/`)
-  );
+  // ----------------------------------------
+  // Check if it's a dashboard route
+  // ----------------------------------------
+  const dashboardRoute = getDashboardRoute(pathname);
+  
+  if (dashboardRoute) {
+    if (!isAuthenticated) {
+      // Not authenticated - redirect to sign in
+      const signInUrl = new URL("/sign-in", request.url);
+      signInUrl.searchParams.set("callbackUrl", pathname);
+      return NextResponse.redirect(signInUrl);
+    }
+    
+    // For role-based access, we need to verify on the server-side
+    // The actual role check happens in the layout/page components
+    // Middleware just ensures user is authenticated
+    const response = NextResponse.next();
+    response.headers.set("x-dashboard-route", dashboardRoute);
+    return response;
+  }
 
-  // Check if this is an address setup route (skip address check)
-  const isAddressSetupRoute = addressSetupRoutes.some(
-    (route) => pathname === route || pathname.startsWith(`${route}/`)
-  );
-
-  // Check if address is required for this route
-  const isAddressRequired = addressRequiredRoutes.some(
-    (route) => pathname === route || pathname.startsWith(`${route}/`)
-  );
-
-  // If user is not authenticated and trying to access protected route
-  if (isProtectedRoute && !sessionCookie) {
+  // ----------------------------------------
+  // Check if it's a protected route (requires auth)
+  // ----------------------------------------
+  const isProtectedRoute = isRouteMatch(pathname, protectedRoutes);
+  
+  if (isProtectedRoute && !isAuthenticated) {
     const signInUrl = new URL("/sign-in", request.url);
     signInUrl.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(signInUrl);
   }
 
-  // If user is authenticated and trying to access auth routes
-  if (isAuthRoute && sessionCookie) {
-    return NextResponse.redirect(new URL("/", request.url));
-  }
-
-  // For address-required routes, we'll handle the check on the client/server side
-  // since we need to query the database for address info
-  // We'll pass a header to indicate this needs address check
-  if (isAddressRequired && sessionCookie && !isAddressSetupRoute) {
+  // ----------------------------------------
+  // Check if address is required for this route
+  // ----------------------------------------
+  const isAddressRequired = isRouteMatch(pathname, addressRequiredRoutes);
+  const isAddressSetupRoute = isRouteMatch(pathname, addressSetupRoutes);
+  
+  if (isAddressRequired && isAuthenticated && !isAddressSetupRoute) {
+    // Pass header to indicate address check is needed
+    // The actual check happens on client/server side
     const response = NextResponse.next();
     response.headers.set("x-address-check-required", "true");
     return response;
@@ -103,7 +153,10 @@ export async function proxy(request: NextRequest) {
   return NextResponse.next();
 }
 
-// Configure which routes the middleware runs on
+// ============================================
+// MATCHER CONFIGURATION
+// ============================================
+
 export const config = {
   matcher: [
     /*
@@ -112,7 +165,7 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
-     * - public folder
+     * - public assets (images, etc.)
      */
     "/((?!api|_next/static|_next/image|favicon.ico|.*\\..*|_next).*)",
   ],

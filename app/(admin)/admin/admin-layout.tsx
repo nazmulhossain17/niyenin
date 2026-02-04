@@ -280,10 +280,10 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           return;
         }
         const role = (session.user as { role?: UserRole }).role;
-        // if (role !== "admin" && role !== "super_admin") {
-        //   router.push("/");
-        //   return;
-        // }
+        if (role !== "admin" && role !== "super_admin") {
+          router.push("/");
+          return;
+        }
         setUser(session.user);
       } catch (error) {
         console.error("Auth check error:", error);

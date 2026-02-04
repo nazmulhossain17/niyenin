@@ -27,19 +27,13 @@ import {
   MapPin,
   Plus,
   Shield,
-  Bell,
-  Settings,
   Package,
-  Heart,
-  CreditCard,
-  Loader2,
   Camera,
   CheckCircle,
   AlertCircle,
 } from "lucide-react";
 import { UserAddress, getAddresses } from "@/lib/api/user";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
 import { AddressCard } from "@/components/profile/AddressCard";
 import { AddressFormDialog } from "@/components/profile/AddressFormDialog";
 

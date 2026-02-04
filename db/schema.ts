@@ -1,3 +1,4 @@
+import { relations } from "drizzle-orm";
 import {
   pgTable,
   text,
@@ -13,6 +14,7 @@ import {
   varchar,
   jsonb,
   date,
+  unique,
 } from "drizzle-orm/pg-core";
 
 /*************************
@@ -893,37 +895,101 @@ export const couponUsage = pgTable(
 export const reviews = pgTable(
   "reviews",
   {
-    reviewId: uuid("review_id").primaryKey().defaultRandom(),
+    reviewId: uuid("review_id").defaultRandom().primaryKey(),
     productId: uuid("product_id")
       .notNull()
       .references(() => products.productId, { onDelete: "cascade" }),
     userId: text("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
-    orderId: uuid("order_id").references(() => orders.orderId, { onDelete: "set null" }),
-    orderItemId: uuid("order_item_id").references(() => orderItems.orderItemId, {
-      onDelete: "set null",
-    }),
+    
+    // Rating (1-5 stars)
     rating: integer("rating").notNull(),
-    title: varchar("title", { length: 200 }),
-    comment: text("comment"),
-    images: jsonb("images").$type<string[]>().default([]),
-    isApproved: boolean("is_approved").default(false).notNull(),
+    
+    // Review content
+    title: varchar("title", { length: 100 }),
+    comment: text("comment").notNull(),
+    
+    // Optional review images
+    images: jsonb("images").$type<string[]>(),
+    
+    // Verified purchase badge
     isVerifiedPurchase: boolean("is_verified_purchase").default(false).notNull(),
-    moderatedBy: text("moderated_by").references(() => user.id),
-    moderatedAt: timestamp("moderated_at", { withTimezone: true }),
+    
+    // Helpful votes count (denormalized for performance)
     helpfulCount: integer("helpful_count").default(0).notNull(),
-    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+    
+    // Timestamps
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
-  (t) => ({
-    reviewProductIdx: index("review_product_idx").on(t.productId),
-    reviewUserIdx: index("review_user_idx").on(t.userId),
-    reviewApprovedIdx: index("review_approved_idx").on(t.isApproved),
-    reviewRatingIdx: index("review_rating_idx").on(t.rating),
-    reviewUniqueIdx: uniqueIndex("review_unique_idx").on(t.productId, t.userId, t.orderId),
+  (table) => ({
+    // Indexes for common queries
+    productIdIdx: index("reviews_product_id_idx").on(table.productId),
+    userIdIdx: index("reviews_user_id_idx").on(table.userId),
+    ratingIdx: index("reviews_rating_idx").on(table.rating),
+    createdAtIdx: index("reviews_created_at_idx").on(table.createdAt),
+    
+    // Unique constraint: one review per user per product
+    uniqueUserProduct: unique("reviews_user_product_unique").on(
+      table.userId,
+      table.productId
+    ),
   })
 );
+
+// ============================================
+// REVIEW HELPFUL VOTES TABLE
+// ============================================
+export const reviewHelpful = pgTable(
+  "review_helpful",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    reviewId: uuid("review_id")
+      .notNull()
+      .references(() => reviews.reviewId, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    // Unique constraint: one vote per user per review
+    uniqueUserReview: unique("review_helpful_user_review_unique").on(
+      table.userId,
+      table.reviewId
+    ),
+    reviewIdIdx: index("review_helpful_review_id_idx").on(table.reviewId),
+    userIdIdx: index("review_helpful_user_id_idx").on(table.userId),
+  })
+);
+
+// ============================================
+// RELATIONS
+// ============================================
+export const reviewsRelations = relations(reviews, ({ one, many }) => ({
+  product: one(products, {
+    fields: [reviews.productId],
+    references: [products.productId],
+  }),
+  user: one(user, {
+    fields: [reviews.userId],
+    references: [user.id],
+  }),
+  helpfulVotes: many(reviewHelpful),
+}));
+
+export const reviewHelpfulRelations = relations(reviewHelpful, ({ one }) => ({
+  review: one(reviews, {
+    fields: [reviewHelpful.reviewId],
+    references: [reviews.reviewId],
+  }),
+  user: one(user, {
+    fields: [reviewHelpful.userId],
+    references: [user.id],
+  }),
+}));
+
 
 export const vendorReviews = pgTable(
   "vendor_reviews",
@@ -1291,6 +1357,7 @@ export const schema = {
 
   // Reviews & Q&A
   reviews,
+  reviewHelpful,  // ADD THIS LINE
   vendorReviews,
   productQuestions,
   productAnswers,
