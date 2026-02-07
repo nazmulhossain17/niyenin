@@ -421,7 +421,7 @@ const ProductCard = ({
             </p>
 
             <Link href={`/shop/${product.slug}`}>
-              <h3 className="font-medium text-sm line-clamp-2 min-h-[40px] hover:text-primary transition-colors">
+              <h3 className="font-medium text-sm line-clamp-2 min-h-10 hover:text-primary transition-colors">
                 {product.name}
               </h3>
             </Link>

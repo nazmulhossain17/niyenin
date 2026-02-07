@@ -81,9 +81,6 @@ const navigationItems: NavItem[] = [
     label: "Products",
     children: [
       { icon: Package, label: "All Products", href: "/vendor/products" },
-      { icon: Layers, label: "Categories", href: "/vendor/categories" },
-      { icon: Tag, label: "Brands", href: "/vendor/brands" },
-      { icon: FileText, label: "Attributes", href: "/vendor/attributes" },
       { icon: AlertTriangle, label: "Pending Review", href: "/vendor/products/pending", badge: 5 },
     ],
   },

@@ -156,7 +156,7 @@ export default function SignInPage() {
     }
     
     if (role === "vendor") {
-      router.push("/vendor/dashboard");
+      router.push("/vendor");
       return;
     }
 
