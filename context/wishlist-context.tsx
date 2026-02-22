@@ -18,7 +18,10 @@ export interface WishlistItem {
   price: number;
   originalPrice?: number;
   inStock: boolean;
+  vendorId: string;
   vendorName: string;
+  rating?: number;
+  reviewCount?: number;
   addedAt: string;
 }
 

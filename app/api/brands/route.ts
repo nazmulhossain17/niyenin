@@ -1,91 +1,68 @@
+// ========================================
 // File: app/api/brands/route.ts
+// Brands API - List and Create Brands
+// ========================================
 
 import { NextRequest, NextResponse } from "next/server";
-import { eq, desc, asc, ilike, or, sql } from "drizzle-orm";
-import { z } from "zod";
-import { brands } from "@/db/schema";
 import { db } from "@/db/drizzle";
-import { requireRoles, ROLES } from "@/lib/api/auth-guard";
+import { brands } from "@/db/schema";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
+import { eq, desc, asc, ilike, and, count, SQL } from "drizzle-orm";
+import { z } from "zod";
 
-// Validation schema for creating a brand
-const createBrandSchema = z.object({
-  name: z.string().min(1, "Name is required").max(100),
-  slug: z.string().min(1, "Slug is required").max(150),
-  description: z.string().optional(),
-  logo: z.string().url().optional().or(z.literal("")),
-  website: z.string().url().optional().or(z.literal("")),
-  isActive: z.boolean().default(true),
-  isFeatured: z.boolean().default(false),
-  sortOrder: z.number().int().default(0),
-});
+// Helper to check admin access
+const isAdmin = (role: string) => role === "admin" || role === "super_admin";
 
-// GET /api/brands - Get all brands (Public)
+// ============================================
+// GET - List all brands
+// ============================================
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-
-    // Query parameters
-    const includeInactive = searchParams.get("includeInactive") === "true";
-    const featured = searchParams.get("featured") === "true";
-    const search = searchParams.get("search");
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "50");
-    const sortBy = searchParams.get("sortBy") || "sortOrder";
+    const search = searchParams.get("search");
+    const isActive = searchParams.get("isActive");
+    const sortBy = searchParams.get("sortBy") || "name";
     const sortOrder = searchParams.get("sortOrder") || "asc";
-
-    // Build query conditions
-    const conditions = [];
-
-    if (!includeInactive) {
-      conditions.push(eq(brands.isActive, true));
-    }
-
-    if (featured) {
-      conditions.push(eq(brands.isFeatured, true));
-    }
-
-    if (search) {
-      conditions.push(
-        or(
-          ilike(brands.name, `%${search}%`),
-          ilike(brands.slug, `%${search}%`),
-          ilike(brands.description, `%${search}%`)
-        )
-      );
-    }
-
-    // Execute query
     const offset = (page - 1) * limit;
 
-    // Define valid sort columns
-    const sortColumns = {
-      sortOrder: brands.sortOrder,
-      name: brands.name,
-      createdAt: brands.createdAt,
-      updatedAt: brands.updatedAt,
-    } as const;
+    // Build where conditions
+    const conditions: SQL<unknown>[] = [];
 
-    const sortColumn = sortColumns[sortBy as keyof typeof sortColumns] ?? brands.sortOrder;
+    if (search) {
+      conditions.push(ilike(brands.name, `%${search}%`));
+    }
 
-    const result = await db
+    if (isActive !== null && isActive !== undefined && isActive !== "") {
+      conditions.push(eq(brands.isActive, isActive === "true"));
+    }
+
+    // Get total count
+    const [totalResult] = await db
+      .select({ count: count() })
+      .from(brands)
+      .where(conditions.length > 0 ? and(...conditions) : undefined);
+
+    const total = totalResult?.count || 0;
+
+    // Determine sort column
+    const sortColumn = sortBy === "createdAt" ? brands.createdAt : brands.name;
+    const orderBy = sortOrder === "desc" ? desc(sortColumn) : asc(sortColumn);
+
+    // Get brands
+    const brandsList = await db
       .select()
       .from(brands)
-      .where(conditions.length > 0 ? sql`${sql.join(conditions, sql` AND `)}` : undefined)
-      .orderBy(sortOrder === "desc" ? desc(sortColumn) : asc(sortColumn))
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .orderBy(orderBy)
       .limit(limit)
       .offset(offset);
 
-    // Get total count for pagination
-    const countResult = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(brands)
-      .where(conditions.length > 0 ? sql`${sql.join(conditions, sql` AND `)}` : undefined);
-
-    const total = Number(countResult[0]?.count || 0);
-
     return NextResponse.json({
       success: true,
-      data: result,
+      data: brandsList,
       meta: {
         page,
         limit,
@@ -102,68 +79,88 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/brands - Create a new brand
-// Only super_admin and admin can create brands
-export async function POST(request: NextRequest) {
+// ============================================
+// POST - Create a new brand (Admin only)
+// ============================================
+const createBrandSchema = z.object({
+  name: z.string().min(1).max(100),
+  slug: z.string().min(1).max(100).optional(),
+  description: z.string().max(1000).optional().nullable(),
+  logo: z.string().url().optional().nullable(),
+  website: z.string().url().optional().nullable(),
+  isActive: z.boolean().optional().default(true),
+  isFeatured: z.boolean().optional().default(false),
+});
+
+export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
-    // Check authorization - only admins can create brands
-    const authResult = await requireRoles(ROLES.ADMINS);
-    if (!authResult.authorized) {
-      return authResult.error;
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
+
+    if (!session?.user) {
+      return NextResponse.json(
+        { success: false, error: "Authentication required" },
+        { status: 401 }
+      );
+    }
+
+    if (!isAdmin(session.user.role)) {
+      return NextResponse.json(
+        { success: false, error: "Admin access required" },
+        { status: 403 }
+      );
     }
 
     const body = await request.json();
+    const validatedData = createBrandSchema.parse(body);
 
-    // Validate request body
-    const validationResult = createBrandSchema.safeParse(body);
+    // Generate slug if not provided
+    const slug = validatedData.slug || 
+      validatedData.name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "");
 
-    if (!validationResult.success) {
+    // Check if brand with same name or slug exists
+    const [existingBrand] = await db
+      .select()
+      .from(brands)
+      .where(eq(brands.slug, slug));
+
+    if (existingBrand) {
       return NextResponse.json(
-        {
-          success: false,
-          error: "Validation failed",
-          details: validationResult.error.flatten(),
-        },
+        { success: false, error: "Brand with this name already exists" },
         { status: 400 }
       );
     }
 
-    const data = validationResult.data;
-
-    // Check if slug already exists
-    const existingBrand = await db
-      .select({ slug: brands.slug })
-      .from(brands)
-      .where(eq(brands.slug, data.slug))
-      .limit(1);
-
-    if (existingBrand.length > 0) {
-      return NextResponse.json(
-        { success: false, error: "Brand with this slug already exists" },
-        { status: 409 }
-      );
-    }
-
     // Create brand
-    const newBrand = await db
+    const [newBrand] = await db
       .insert(brands)
       .values({
-        name: data.name,
-        slug: data.slug,
-        description: data.description || null,
-        logo: data.logo || null,
-        website: data.website || null,
-        isActive: data.isActive,
-        isFeatured: data.isFeatured,
-        sortOrder: data.sortOrder,
+        name: validatedData.name,
+        slug,
+        description: validatedData.description || null,
+        logo: validatedData.logo || null,
+        website: validatedData.website || null,
+        isActive: validatedData.isActive ?? true,
+        isFeatured: validatedData.isFeatured ?? false,
       })
       .returning();
 
-    return NextResponse.json(
-      { success: true, data: newBrand[0] },
-      { status: 201 }
-    );
+    return NextResponse.json({
+      success: true,
+      data: newBrand,
+      message: "Brand created successfully",
+    });
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { success: false, error: "Invalid data", details: error.message },
+        { status: 400 }
+      );
+    }
     console.error("Error creating brand:", error);
     return NextResponse.json(
       { success: false, error: "Failed to create brand" },

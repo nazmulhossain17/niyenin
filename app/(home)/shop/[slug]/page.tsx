@@ -178,7 +178,7 @@ const UserAvatar = ({ name, image, size = "md" }: { name: string | null; image: 
   };
   if (image) return <Image src={image} alt={name || "User"} width={48} height={48} className={`${sizeClasses[size]} rounded-full object-cover`} />;
   return (
-    <div className={`${sizeClasses[size]} rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center text-white font-medium`}>
+    <div className={`${sizeClasses[size]} rounded-full bg-linear-to-br from-primary to-primary/60 flex items-center justify-center text-white font-medium`}>
       {getInitials(name)}
     </div>
   );
@@ -494,7 +494,7 @@ const ReviewsSection = ({ productId }: { productId: string }) => {
 
 // Loading Skeleton
 const ProductDetailSkeleton = () => (
-  <div className="max-w-[1600px] mx-auto px-4 py-8">
+  <div className="max-w-400 mx-auto px-4 py-8">
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
       <Skeleton className="aspect-square rounded-2xl" />
       <div className="space-y-6">
@@ -566,9 +566,16 @@ export default function ProductDetailsPage() {
   const handleToggleWishlist = () => {
     if (!product) return;
     toggleWishlist({
-      productId: product.productId, name: product.name, slug: product.slug, image: product.mainImage || "",
-      price, originalPrice, inStock: product.stockQuantity > 0, vendorName: product.vendorName || "Unknown",
-    });
+  productId: product.productId,
+  name: product.name,
+  slug: product.slug,
+  image: product.mainImage || "",
+  price,
+  originalPrice,
+  inStock: product.stockQuantity > 0,
+  vendorName: product.vendorName || "Unknown",
+  vendorId: product.vendorId, // Add this line
+});
     toast.success(isInWishlist(product.productId) ? "Removed from wishlist" : "Added to wishlist");
   };
 
@@ -710,7 +717,7 @@ export default function ProductDetailsPage() {
               <div className="border border-border rounded-xl p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center text-white overflow-hidden">
+                    <div className="w-12 h-12 rounded-full bg-linear-to-br from-primary to-primary/60 flex items-center justify-center text-white overflow-hidden">
                       {product.vendorLogo ? <Image src={product.vendorLogo} alt={product.vendorName} width={48} height={48} className="w-full h-full object-cover" /> : <Store className="w-6 h-6" />}
                     </div>
                     <div><Link href={`/vendors/${product.vendorSlug || product.vendorId}`} className="font-medium hover:text-primary">{product.vendorName}</Link></div>

@@ -30,7 +30,7 @@ import {
   Clock,
   Percent,
 } from "lucide-react";
-import { useCart } from "@/context/cart-context";
+import { useCart, CartItem } from "@/context/cart-context";
 import { useWishlist } from "@/context/wishlist-context";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -70,10 +70,10 @@ const CartItemCard = ({
   onMoveToWishlist,
   isUpdating,
 }: {
-  item: any;
+  item: CartItem;
   onUpdateQuantity: (id: string, quantity: number) => void;
   onRemove: (id: string) => void;
-  onMoveToWishlist: (item: any) => void;
+  onMoveToWishlist: (item: CartItem) => void;
   isUpdating: boolean;
 }) => {
   const [isRemoving, setIsRemoving] = useState(false);
@@ -101,7 +101,7 @@ const CartItemCard = ({
         <CardContent className="p-4 md:p-6">
           <div className="flex gap-4">
             {/* Product Image */}
-            <Link href={`/shop/${item.slug}`} className="shrink-0">
+            <Link href={`/products/${item.slug}`} className="shrink-0">
               <div className="w-24 h-24 md:w-32 md:h-32 rounded-lg overflow-hidden bg-muted relative group">
                 {item.image ? (
                   <Image
@@ -127,7 +127,7 @@ const CartItemCard = ({
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
-                  <Link href={`/shop/${item.slug}`}>
+                  <Link href={`/products/${item.slug}`}>
                     <h3 className="font-semibold text-foreground hover:text-primary transition-colors line-clamp-2">
                       {item.name}
                     </h3>
@@ -362,7 +362,7 @@ const OrderSummary = ({
         {discount > 0 && (
           <div className="mt-3 p-2 bg-green-50 dark:bg-green-900/20 rounded-lg text-center">
             <span className="text-sm text-green-600 dark:text-green-400 font-medium">
-              🎉 You're saving ৳{discount.toLocaleString()}!
+              🎉 You&apos;re saving ৳{discount.toLocaleString()}!
             </span>
           </div>
         )}
@@ -416,7 +416,7 @@ export default function CartPage() {
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
 
-  const handleMoveToWishlist = (item: any) => {
+  const handleMoveToWishlist = (item: CartItem) => {
     if (!isInWishlist(item.productId)) {
       addToWishlist({
         productId: item.productId,
@@ -426,6 +426,7 @@ export default function CartPage() {
         price: item.price,
         originalPrice: item.originalPrice,
         inStock: true,
+        vendorId: item.vendorId,
         vendorName: item.vendorName,
       });
       toast.success("Saved to wishlist");

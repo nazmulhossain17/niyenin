@@ -170,15 +170,16 @@ const ProductCard = ({
     e.stopPropagation();
 
     toggleWishlist({
-      productId: product.productId,
-      name: product.name,
-      slug: product.slug,
-      image: product.mainImage || "",
-      price,
-      originalPrice,
-      inStock: product.stockQuantity > 0,
-      vendorName: product.vendorName || "Unknown",
-    });
+  productId: product.productId,
+  name: product.name,
+  slug: product.slug,
+  image: product.mainImage || "",
+  price,
+  originalPrice,
+  inStock: product.stockQuantity > 0,
+  vendorName: product.vendorName || "Unknown",
+  vendorId: product.vendorId, // Add this line
+});
 
     toast.success(inWishlist ? "Removed from wishlist" : "Added to wishlist");
   };

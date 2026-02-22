@@ -25,7 +25,7 @@ import {
   Store,
   ExternalLink,
 } from "lucide-react";
-import { useWishlist } from "@/context/wishlist-context";
+import { useWishlist, WishlistItem } from "@/context/wishlist-context";
 import { useCart } from "@/context/cart-context";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -68,9 +68,9 @@ const WishlistItemGridCard = ({
   onAddToCart,
   isAddingToCart,
 }: {
-  item: any;
+  item: WishlistItem;
   onRemove: (productId: string) => void;
-  onAddToCart: (item: any) => void;
+  onAddToCart: (item: WishlistItem) => void;
   isAddingToCart: boolean;
 }) => {
   const [isRemoving, setIsRemoving] = useState(false);
@@ -187,7 +187,9 @@ const WishlistItemGridCard = ({
             <div className="flex items-center gap-1 mt-2">
               <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
               <span className="text-sm font-medium">{item.rating}</span>
-              <span className="text-xs text-muted-foreground">({item.reviewCount})</span>
+              {item.reviewCount && (
+                <span className="text-xs text-muted-foreground">({item.reviewCount})</span>
+              )}
             </div>
           )}
 
@@ -247,9 +249,9 @@ const WishlistItemListCard = ({
   onAddToCart,
   isAddingToCart,
 }: {
-  item: any;
+  item: WishlistItem;
   onRemove: (productId: string) => void;
-  onAddToCart: (item: any) => void;
+  onAddToCart: (item: WishlistItem) => void;
   isAddingToCart: boolean;
 }) => {
   const [isRemoving, setIsRemoving] = useState(false);
@@ -383,7 +385,7 @@ export default function WishlistPage() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [addingToCartId, setAddingToCartId] = useState<string | null>(null);
 
-  const handleAddToCart = async (item: any) => {
+  const handleAddToCart = async (item: WishlistItem) => {
     if (isInCart(item.productId)) {
       toast.info("Item is already in your cart");
       return;
@@ -401,7 +403,7 @@ export default function WishlistPage() {
       originalPrice: item.originalPrice,
       quantity: 1,
       maxQuantity: 10,
-      vendorId: item.vendorId || "vendor-1",
+      vendorId: item.vendorId,
       vendorName: item.vendorName,
     });
 
@@ -422,7 +424,7 @@ export default function WishlistPage() {
           originalPrice: item.originalPrice,
           quantity: 1,
           maxQuantity: 10,
-          vendorId: item.vendorId || "vendor-1",
+          vendorId: item.vendorId,
           vendorName: item.vendorName,
         });
         addedCount++;

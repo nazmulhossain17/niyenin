@@ -1,102 +1,111 @@
+// ========================================
 // File: app/api/categories/route.ts
+// Categories API - List and Create Categories
+// ========================================
 
 import { NextRequest, NextResponse } from "next/server";
-import { eq, desc, asc, isNull, sql } from "drizzle-orm";
-import { z } from "zod";
-import { categories } from "@/db/schema";
 import { db } from "@/db/drizzle";
-import { requireRoles, ROLES } from "@/lib/api/auth-guard";
+import { categories } from "@/db/schema";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
+import { eq, desc, asc, ilike, and, count, isNull, SQL } from "drizzle-orm";
+import { z } from "zod";
 
-// Validation schema for creating a category
-const createCategorySchema = z.object({
-  name: z.string().min(1, "Name is required").max(100),
-  slug: z.string().min(1, "Slug is required").max(150),
-  description: z.string().optional(),
-  image: z.string().url().optional().or(z.literal("")),
-  icon: z.string().max(100).optional(),
-  parentId: z.string().uuid().optional().nullable(),
-  sortOrder: z.number().int().default(0),
-  isActive: z.boolean().default(true),
-  isFeatured: z.boolean().default(false),
-  metaTitle: z.string().max(200).optional(),
-  metaDescription: z.string().optional(),
-});
+// Helper to check admin access
+const isAdmin = (role: string) => role === "admin" || role === "super_admin";
 
-// GET /api/categories - Get all categories (Public)
-export async function GET(request: NextRequest) {
+// ============================================
+// GET - List all categories
+// ============================================
+export async function GET(request: NextRequest): Promise<NextResponse> {
   try {
     const { searchParams } = new URL(request.url);
-    
-    // Query parameters
-    const includeInactive = searchParams.get("includeInactive") === "true";
-    const parentId = searchParams.get("parentId");
-    const featured = searchParams.get("featured") === "true";
-    const tree = searchParams.get("tree") === "true";
     const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "50");
+    const limit = parseInt(searchParams.get("limit") || "100");
+    const search = searchParams.get("search");
+    const isActive = searchParams.get("isActive");
+    const parentId = searchParams.get("parentId");
+    const level = searchParams.get("level");
+    const tree = searchParams.get("tree") === "true";
     const sortBy = searchParams.get("sortBy") || "sortOrder";
     const sortOrder = searchParams.get("sortOrder") || "asc";
+    const offset = (page - 1) * limit;
 
-    // Build query conditions
-    const conditions = [];
-    
-    if (!includeInactive) {
-      conditions.push(eq(categories.isActive, true));
+    // Build where conditions
+    const conditions: SQL<unknown>[] = [];
+
+    if (search) {
+      conditions.push(ilike(categories.name, `%${search}%`));
     }
-    
-    if (parentId === "null" || parentId === "root") {
+
+    if (isActive !== null && isActive !== undefined && isActive !== "") {
+      conditions.push(eq(categories.isActive, isActive === "true"));
+    }
+
+    if (parentId === "null" || parentId === "") {
       conditions.push(isNull(categories.parentId));
     } else if (parentId) {
       conditions.push(eq(categories.parentId, parentId));
     }
-    
-    if (featured) {
-      conditions.push(eq(categories.isFeatured, true));
+
+    if (level !== null && level !== undefined && level !== "") {
+      conditions.push(eq(categories.level, parseInt(level)));
     }
 
-    // Execute query
-    const offset = (page - 1) * limit;
+    // Get total count
+    const [totalResult] = await db
+      .select({ count: count() })
+      .from(categories)
+      .where(conditions.length > 0 ? and(...conditions) : undefined);
 
-    // Define valid sort columns
-    const sortColumns = {
-      sortOrder: categories.sortOrder,
-      name: categories.name,
-      createdAt: categories.createdAt,
-      updatedAt: categories.updatedAt,
-      level: categories.level,
-    } as const;
+    const total = totalResult?.count || 0;
 
-    const sortColumn = sortColumns[sortBy as keyof typeof sortColumns] ?? categories.sortOrder;
-    
-    const result = await db
+    // Determine sort column
+    let sortColumn;
+    switch (sortBy) {
+      case "name":
+        sortColumn = categories.name;
+        break;
+      case "createdAt":
+        sortColumn = categories.createdAt;
+        break;
+      default:
+        sortColumn = categories.sortOrder;
+    }
+    const orderByClause = sortOrder === "desc" ? desc(sortColumn) : asc(sortColumn);
+
+    // Get categories
+    const categoriesList = await db
       .select()
       .from(categories)
-      .where(conditions.length > 0 ? sql`${sql.join(conditions, sql` AND `)}` : undefined)
-      .orderBy(sortOrder === "desc" ? desc(sortColumn) : asc(sortColumn))
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .orderBy(orderByClause)
       .limit(limit)
       .offset(offset);
 
-    // Get total count for pagination
-    const countResult = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(categories)
-      .where(conditions.length > 0 ? sql`${sql.join(conditions, sql` AND `)}` : undefined);
-
-    const total = Number(countResult[0]?.count || 0);
-
-    // If tree structure is requested, build hierarchical data
+    // If tree format is requested, build hierarchical structure
     if (tree) {
+      const buildTree = (items: typeof categoriesList, parentId: string | null = null): any[] => {
+        return items
+          .filter((item) => item.parentId === parentId)
+          .map((item) => ({
+            ...item,
+            children: buildTree(items, item.categoryId),
+          }));
+      };
+
+      // Get all categories for tree building
       const allCategories = await db
         .select()
         .from(categories)
-        .where(!includeInactive ? eq(categories.isActive, true) : undefined)
+        .where(isActive === "true" ? eq(categories.isActive, true) : undefined)
         .orderBy(asc(categories.sortOrder));
 
-      const categoryTree = buildCategoryTree(allCategories);
-      
+      const treeData = buildTree(allCategories);
+
       return NextResponse.json({
         success: true,
-        data: categoryTree,
+        data: treeData,
         meta: {
           total: allCategories.length,
         },
@@ -105,7 +114,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data: result,
+      data: categoriesList,
       meta: {
         page,
         limit,
@@ -122,104 +131,119 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/categories - Create a new category
-// Only super_admin and admin can create categories
-export async function POST(request: NextRequest) {
+// ============================================
+// POST - Create a new category (Admin only)
+// ============================================
+const createCategorySchema = z.object({
+  name: z.string().min(1).max(100),
+  slug: z.string().min(1).max(100).optional(),
+  description: z.string().max(1000).optional().nullable(),
+  image: z.string().url().optional().nullable(),
+  icon: z.string().max(50).optional().nullable(),
+  parentId: z.string().uuid().optional().nullable(),
+  sortOrder: z.number().int().optional().default(0),
+  isActive: z.boolean().optional().default(true),
+  isFeatured: z.boolean().optional().default(false),
+  metaTitle: z.string().max(200).optional().nullable(),
+  metaDescription: z.string().max(500).optional().nullable(),
+});
+
+export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
-    // Check authorization - only admins can create categories
-    const authResult = await requireRoles(ROLES.ADMINS);
-    if (!authResult.authorized) {
-      return authResult.error;
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
+
+    if (!session?.user) {
+      return NextResponse.json(
+        { success: false, error: "Authentication required" },
+        { status: 401 }
+      );
+    }
+
+    if (!isAdmin(session.user.role)) {
+      return NextResponse.json(
+        { success: false, error: "Admin access required" },
+        { status: 403 }
+      );
     }
 
     const body = await request.json();
-    
-    // Validate request body
-    const validationResult = createCategorySchema.safeParse(body);
-    
-    if (!validationResult.success) {
+    const validatedData = createCategorySchema.parse(body);
+
+    // Generate slug if not provided
+    const slug =
+      validatedData.slug ||
+      validatedData.name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "");
+
+    // Check if category with same slug exists
+    const [existingCategory] = await db
+      .select()
+      .from(categories)
+      .where(eq(categories.slug, slug));
+
+    if (existingCategory) {
       return NextResponse.json(
-        { 
-          success: false, 
-          error: "Validation failed", 
-          details: validationResult.error.flatten() 
-        },
+        { success: false, error: "Category with this slug already exists" },
         { status: 400 }
       );
     }
 
-    const data = validationResult.data;
-
-    // Check if slug already exists
-    const existingCategory = await db
-      .select({ slug: categories.slug })
-      .from(categories)
-      .where(eq(categories.slug, data.slug))
-      .limit(1);
-
-    if (existingCategory.length > 0) {
-      return NextResponse.json(
-        { success: false, error: "Category with this slug already exists" },
-        { status: 409 }
-      );
-    }
-
-    // Calculate level based on parent
+    // Determine level based on parent
     let level = 0;
-    if (data.parentId) {
-      const parentCategory = await db
-        .select({ level: categories.level })
+    if (validatedData.parentId) {
+      const [parentCategory] = await db
+        .select()
         .from(categories)
-        .where(eq(categories.categoryId, data.parentId))
-        .limit(1);
+        .where(eq(categories.categoryId, validatedData.parentId));
 
-      if (parentCategory.length === 0) {
+      if (!parentCategory) {
         return NextResponse.json(
           { success: false, error: "Parent category not found" },
-          { status: 404 }
+          { status: 400 }
         );
       }
-      level = parentCategory[0].level + 1;
+      level = parentCategory.level + 1;
     }
 
     // Create category
-    const newCategory = await db
+    const [newCategory] = await db
       .insert(categories)
       .values({
-        name: data.name,
-        slug: data.slug,
-        description: data.description || null,
-        image: data.image || null,
-        icon: data.icon || null,
-        parentId: data.parentId || null,
+        name: validatedData.name,
+        slug,
+        description: validatedData.description || null,
+        image: validatedData.image || null,
+        icon: validatedData.icon || null,
+        parentId: validatedData.parentId || null,
         level,
-        sortOrder: data.sortOrder,
-        isActive: data.isActive,
-        isFeatured: data.isFeatured,
-        metaTitle: data.metaTitle || null,
-        metaDescription: data.metaDescription || null,
+        sortOrder: validatedData.sortOrder ?? 0,
+        isActive: validatedData.isActive ?? true,
+        isFeatured: validatedData.isFeatured ?? false,
+        metaTitle: validatedData.metaTitle || null,
+        metaDescription: validatedData.metaDescription || null,
       })
       .returning();
 
-    return NextResponse.json(
-      { success: true, data: newCategory[0] },
-      { status: 201 }
-    );
+    return NextResponse.json({
+      success: true,
+      data: newCategory,
+      message: "Category created successfully",
+    });
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { success: false, error: "Invalid data", details: error.message },
+        { status: 400 }
+      );
+    }
     console.error("Error creating category:", error);
     return NextResponse.json(
       { success: false, error: "Failed to create category" },
       { status: 500 }
     );
   }
-}
-
-// Helper function to build category tree
-function buildCategoryTree(categories: any[], parentId: string | null = null): any[] {
-  return categories
-    .filter((cat) => cat.parentId === parentId)
-    .map((cat) => ({
-      ...cat,
-      children: buildCategoryTree(categories, cat.categoryId),
-    }));
 }
